@@ -363,7 +363,7 @@ class Enjoy_your_meal_with(HTMLParser):
 
 								query_creation = "INSERT INTO majors_51_offers (english_name, degree_type) VALUES (%s, %s)"
 
-								query_update = "UPDATE majors_51_offers SET (english_name, degree_type = (%s, %s) WHERE english_name = %s"
+								query_update = "UPDATE majors_51_offers SET (english_name, degree_type) = (%s, %s) WHERE english_name = %s"
 
 								try:
 
