@@ -357,14 +357,58 @@ class Enjoy_your_meal_with(HTMLParser):
 
 								degree_type = soup.select('ul.list-ul.list-specialty li h6')[num_major]
 
-								print major_name, degree_type
-
 								num_major += 1
 
-								nbr_major += 1
+								query_verification = "SELECT COUNT(*) FROM major_51_offers WHERE english_name = %s"
+
+								query_creation = "INSERT INTO major_51_offers (english_name, degree_type) VALUES (%s, %s)"
+
+								query_update = "UPDATE major_51_offers SET (english_name, degree_type = (%s, %s) WHERE english_name = %s"
+
+								try:
+
+									cr.execute(query_verification, (english_name.encode("utf-8").strip(), chinese_name.encode("utf-8").strip(),))
+
+									test = cr.fetchall()[0][0]
+
+									if int(test) == 0:
+
+										try:
+
+											cr.execute(query_creation , (major_name.encode("utf-8").strip(), degree_type.encode("utf-8").strip(), ))
+										
+										except Exception, e:
+
+											print ("############ HERE THE error:", e)
+
+											err += 1
+
+									else:
+
+										print "Exists"
+
+										try:
+
+											cr.execute(query_update , (major_name.encode("utf-8").strip(), degree_type.encode("utf-8").strip(), major_name.encode("utf-8").strip(), )
+											
+											print "Is Being updated"
+
+										except Exception, e:
+
+											print ("############ HERE THE error:", e)
+
+											err += 1
+
+								except Exception, e:
+
+									print "your request failled sorry, here the reason: ", e
+
+									err += 1
+
+								conn.commit()
 
 								print new_page_detail
-
+			conn.close()
 			print nbr_major
 
 
