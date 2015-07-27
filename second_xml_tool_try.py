@@ -389,7 +389,7 @@ class Enjoy_your_meal_with(HTMLParser):
 
 										try:
 
-											cr.execute(query_update , (major_name.encode("utf-8").strip(), degree_type.encode("utf-8").strip(), major_name.encode("utf-8").strip(), )
+											cr.execute(query_update , (major_name.encode("utf-8").strip(), degree_type.encode("utf-8").strip(), major_name.encode("utf-8").strip(),))
 											
 											print "Is Being updated"
 
