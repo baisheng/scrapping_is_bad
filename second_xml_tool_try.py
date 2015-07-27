@@ -211,8 +211,6 @@ class Enjoy_your_meal_with(HTMLParser):
 
 	def get_the_school_detail_page(self):
 
-		self.create_major_table()
-
 		conn = self.connect()	
 
 		cr = conn.cursor()
@@ -292,6 +290,8 @@ class Enjoy_your_meal_with(HTMLParser):
 		conn.close()
 
 	def get_the_majors(self):
+
+		self.create_major_table()
 
 		conn = self.connect()	
 
