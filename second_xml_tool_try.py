@@ -370,10 +370,10 @@ class Enjoy_your_meal_with(HTMLParser):
 
 
 New_object = Enjoy_your_meal_with()
-# print "############### HERE THE TEST MAIN PAGES"
-# New_object.thank_you_for_your_school_51offer()
-# print "############### HERE THE TEST ON A SCHOOL PAGE"
-# New_object.get_the_school_detail_page()
+print "############### HERE THE TEST MAIN PAGES"
+New_object.thank_you_for_your_school_51offer()
+print "############### HERE THE TEST ON A SCHOOL PAGE"
+New_object.get_the_school_detail_page()
 print "############### HERE THE TEST ON A MAJOR PAGE"
 New_object.get_the_majors()
 
