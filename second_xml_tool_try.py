@@ -104,7 +104,7 @@ class Enjoy_your_meal_with(HTMLParser):
 
 		query_create_table = "CREATE TABLE majors_51_offers (major_id serial, english_name varchar(150) NOT NULL, chinese_name varchar(150), degree_type varchar(250))"  
 
-		query_create_table_index = "CREATE UNIQUE INDEX major_id ON school_51_offers (major_id);"  
+		query_create_table_index = "CREATE UNIQUE INDEX major_id ON majors_51_offers (major_id);"  
 
 		# FIRST WE CHECK IF THE TABLE ALREADY EXISTS
 
