@@ -359,11 +359,11 @@ class Enjoy_your_meal_with(HTMLParser):
 
 								num_major += 1
 
-								query_verification = "SELECT COUNT(*) FROM major_51_offers WHERE english_name = %s"
+								query_verification = "SELECT COUNT(*) FROM majors_51_offers WHERE english_name = %s"
 
-								query_creation = "INSERT INTO major_51_offers (english_name, degree_type) VALUES (%s, %s)"
+								query_creation = "INSERT INTO majors_51_offers (english_name, degree_type) VALUES (%s, %s)"
 
-								query_update = "UPDATE major_51_offers SET (english_name, degree_type = (%s, %s) WHERE english_name = %s"
+								query_update = "UPDATE majors_51_offers SET (english_name, degree_type = (%s, %s) WHERE english_name = %s"
 
 								try:
 
