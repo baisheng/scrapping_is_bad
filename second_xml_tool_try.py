@@ -280,7 +280,7 @@ class Enjoy_your_meal_with(HTMLParser):
 
 				try:
 					cr.execute(update_school_info , (content.encode("utf-8").strip(), country.encode("utf-8").strip(), city.encode("utf-8").strip(), tuition_fee.encode("utf-8").strip(), cost_of_living.encode("utf-8").strip(), str(world_ranking).encode("utf-8").strip(), str(national_ranking).encode("utf-8").strip(), link[2], ))
-					message = '\n ##### HERE IS THE SCHOOL COUNTRY:', country.encode("utf-8").strip(), '\n##### HERE IS THE SCHOOL CITY:', city.encode("utf-8").strip(), 'name of this school: ', link[0].encode("utf-8").strip(), '\ n and here the link: ',link[2]
+					message = 'topppppp, that is working'
 					# message +=  '\n##### HERE IS THE SCHOOL CITY:', city.encode("utf-8").strip(), '\n##### HERE ARE THE SCHOOL TUITION FEES:', tuition_fee.strip(), '\n##### HERE ARE THE COST OF LIVING:', cost_of_living.strip()
 					conn.commit()
 				except Exception, e:
@@ -367,7 +367,7 @@ class Enjoy_your_meal_with(HTMLParser):
 
 								try:
 
-									cr.execute(query_verification, (english_name.encode("utf-8").strip(), chinese_name.encode("utf-8").strip(),))
+									cr.execute(query_verification, (major_name.encode("utf-8").strip(),))
 
 									test = cr.fetchall()[0][0]
 
