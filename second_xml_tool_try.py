@@ -102,7 +102,7 @@ class Enjoy_your_meal_with(HTMLParser):
 
 		cr = conn.cursor()
 
-		query_create_table = "CREATE TABLE majors_51_offers (major_id serial, english_name varchar(150) NOT NULL, chinese_name varchar(150), degree_type varchar(250))"  
+		query_create_table = "CREATE TABLE majors_51_offers (major_id serial, english_name varchar() NOT NULL, chinese_name varchar(), degree_type varchar())"  
 
 		query_create_table_index = "CREATE UNIQUE INDEX major_id ON majors_51_offers (major_id);"  
 
@@ -387,7 +387,7 @@ class Enjoy_your_meal_with(HTMLParser):
 
 										print "Exists"
 
-										try:
+										try:œ
 
 											cr.execute(query_update , (major_name.encode("utf-8").strip(), degree_type.encode("utf-8").strip(), major_name.encode("utf-8").strip(),))
 											
