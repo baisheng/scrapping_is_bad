@@ -387,7 +387,7 @@ class Enjoy_your_meal_with(HTMLParser):
 
 										print "Exists"
 
-										try:œ
+										try:
 
 											cr.execute(query_update , (major_name.encode("utf-8").strip(), degree_type.encode("utf-8").strip(), major_name.encode("utf-8").strip(),))
 											
