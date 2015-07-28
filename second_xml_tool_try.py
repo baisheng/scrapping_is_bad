@@ -102,7 +102,7 @@ class Enjoy_your_meal_with(HTMLParser):
 
 		cr = conn.cursor()
 
-		query_create_table = "CREATE TABLE majors_51_offers (major_id serial, english_name varchar() NOT NULL, chinese_name varchar(), degree_type varchar())"  
+		query_create_table = "CREATE TABLE majors_51_offers (major_id serial, english_name varchar NOT NULL, chinese_name varchar, degree_type varchar)"  
 
 		query_create_table_index = "CREATE UNIQUE INDEX major_id ON majors_51_offers (major_id);"  
 
