@@ -355,7 +355,7 @@ class Enjoy_your_meal_with(HTMLParser):
 
 								# major_name_array = major_name.split('(')
 
-								degree_type = soup.select('ul.list-ul.list-specialty li h6')[num_major]
+								degree_type = soup.select('div.layout.specialty-type span')[2 * num_major]
 
 								num_major += 1
 
