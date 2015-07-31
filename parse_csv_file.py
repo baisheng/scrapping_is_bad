@@ -11,53 +11,86 @@ sys.setdefaultencoding("utf-8")
 
 
 # let's build our main class
-class Import_sales_tables():
-	global fileconcerned
+class parse_csv_file():
+
 	global pg_user
+
 	global pg_db
+
 	global pg_passwd
-	global pg_table
-	fileconcerned = '/home/vagrant/sails_api_newpathway/DBCRM/school.csv'
-        pg_user = 'postgres'
+
+	pg_user = 'postgres'
+
 	pg_db = 'test'
+
 	pg_passwd = 'Password1!'
-	pg_table = 'school' 
 
 	def connect(self):
+
 		conn_string = "host='localhost' dbname='test' user='postgres' password='Password1!'"
 
 		try:
+
 			conn = psycopg2.connect(conn_string)
+
 		except:
+
 			print 'I am not able to connect to the database'
 
 		#cr = conn.cursor()
 		return conn
 
-	def table_change_name(self):
-		request1 = 'ALTER TABLE "tcustomer" DROP COLUMN "CUST_ID" RESTRICT'
-		request2 = 'ALTER TABLE "tcustomer" RENAME COLUMN "id" TO "CUST_ID"'
-		conn = self.connect()			
+	def create_the_table(self,pg_table):
+
+		conn = self.connect()
+
 		cr = conn.cursor()
+
+		query_create_table = "CREATE TABLE %s"   
+
+		# FIRST WE CHECK IF THE TABLE ALREADY EXISTS
+
+		query_test = "select exists(select relname from pg_class where relname = '%s' and relkind='r')"
+
 		try:
-			cr.execute(request1)
-                	try:
-                	        cr.execute(request2)
-				message = 'Yawowwwww'
-        	        except:
-	                        message = 'The request to drop column worked however the eequest for changing table column name failled'
-		except:
-			message = 'The request to drop column worked'
+
+			cr.execute(query_test,pg_table)
+
+		except Exception, e:
+
+			print 'Ouppppppssss the query did fail... Here the reason: ', e
+
+		if cr.fetchall()[0][0] == False:
+
+			try:
+
+				cr.execute(query_create_table,pg_table)
+
+			except Exception, e:
+
+				print 'Ouppppppssss we cannot create this table.... Here the reason: ', e
+
 		conn.commit()
-		conn.close()
-		print message
 
-	def import_the_table(self):
+		conn.close()	
+		
+
+	def import_the_table(self,file_concerned,pg_table,index_name):
+
 		cr = self.connect()
-		engine = create_engine('postgresql://' + pg_user + ':' + pg_passwd + '@localhost/' + pg_db)
-		df = pd.read_csv(fileconcerned)
-		df.to_sql(pg_table, engine, index=True, index_label='id', if_exists='append')
 
-Go =  Import_sales_tables()
-Go.import_the_table()
+		#self.create_the_table(pg_table)
+
+		engine = create_engine('postgresql://' + pg_user + ':' + pg_passwd + '@localhost/' + pg_db)
+
+		df = pd.read_csv(file_concerned, error_bad_lines=False)
+
+		df.to_sql(pg_table, engine, index=True, index_label=index_name, if_exists='append')
+
+
+# Import_crm_tables =  parse_csv_file()
+# Import_crm_tables.import_the_table('/home/vagrant/sails_api_newpathway/DBCRM/school.csv','school')
+# Import_crm_tables.import_the_table('/home/vagrant/sails_api_newpathway/DBCRM/Major.csv','major')
+# Go =  Import_sales_tables()
+# Go.import_the_table()
 #Go.table_change_name()

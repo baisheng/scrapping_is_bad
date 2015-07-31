@@ -9,15 +9,11 @@ from HTMLParser import HTMLParser
 reload(sys)
 sys.setdefaultencoding("utf-8")
 
-
-reload(sys)  
-sys.setdefaultencoding('utf8')
-
 global initial_location
 
 initial_location = ['uk','us','au','nz','jp','sg']
 
-class Enjoy_your_meal_with(HTMLParser):
+class scrap_51offer(HTMLParser):
 
 	global pg_user
 
@@ -56,7 +52,7 @@ class Enjoy_your_meal_with(HTMLParser):
 
 		cr = conn.cursor()
 
-		query_create_table = "CREATE TABLE school_51_offers (school_id serial, english_name varchar(150) NOT NULL, chinese_name varchar(150) NOT NULL, logo varchar(250), rank integer, country varchar(50), location varchar(50), city varchar(50), tuition_fees varchar, SAT_score decimal, school_profile text, world_ranking varchar, national_ranking varchar, cost_of_living varchar, teaching_type text, link varchar)"  
+		query_create_table = "CREATE TABLE school_51_offers (school_id serial, english_name varchar(150) NOT NULL, chinese_name varchar(150) NOT NULL, logo varchar(250), rank integer, country varchar(50), location varchar(50), city varchar(50), tuition_fees varchar, SAT_score decimal, introduction text, world_ranking varchar, national_ranking varchar, cost_of_living varchar, teaching_type text, link varchar)"  
 
 		query_create_table_index = "CREATE UNIQUE INDEX school_id ON school_51_offers (school_id);"  
 
@@ -140,6 +136,39 @@ class Enjoy_your_meal_with(HTMLParser):
 
 		conn.commit()
 		conn.close()		
+
+	def create_many_to_many_table(self):
+
+		conn = self.connect()	
+
+		cr = conn.cursor()
+
+		query_create_table = "CREATE TABLE majors_schools_table (major_id integer NOT NULL, school_id integer NOT NULL, FOREIGN KEY (major_id) REFERENCES majors_51_offers (major_id), FOREIGN KEY (school_id) REFERENCES school_51_offers (school_id))"  
+
+		# FIRST WE CHECK IF THE TABLE ALREADY EXISTS
+
+		query_test = "select exists(select relname from pg_class where relname = 'majors_schools_table' and relkind='r')"
+
+		try:
+
+			cr.execute(query_test)
+
+		except Exception, e:
+
+			print 'Ouppppppssss the query did failled... Here the reason: ', e
+
+		if cr.fetchall()[0][0] == False:
+
+			try:
+
+				cr.execute(query_create_table)
+
+			except Exception, e:
+
+				print 'Ouppppppssss we cannot create this table.... Here the reason: ', e
+
+		conn.commit()
+		conn.close()	
 
 
 	def thank_you_for_your_school_51offer(self):
@@ -276,7 +305,7 @@ class Enjoy_your_meal_with(HTMLParser):
 				else:
 					cost_of_living = ''
 
-				update_school_info = "UPDATE school_51_offers SET (school_profile, country, city, tuition_fees, cost_of_living, world_ranking, national_ranking) = (%s, %s, %s, %s, %s, %s, %s)  WHERE link = %s"
+				update_school_info = "UPDATE school_51_offers SET (introduction, country, city, tuition_fees, cost_of_living, world_ranking, national_ranking) = (%s, %s, %s, %s, %s, %s, %s)  WHERE link = %s"
 
 				try:
 					cr.execute(update_school_info , (content.encode("utf-8").strip(), country.encode("utf-8").strip(), city.encode("utf-8").strip(), tuition_fee.encode("utf-8").strip(), cost_of_living.encode("utf-8").strip(), str(world_ranking).encode("utf-8").strip(), str(national_ranking).encode("utf-8").strip(), link[2], ))
@@ -292,6 +321,8 @@ class Enjoy_your_meal_with(HTMLParser):
 	def get_the_majors(self):
 
 		self.create_major_table()
+
+		self.create_many_to_many_table()
 
 		conn = self.connect()	
 
@@ -413,7 +444,7 @@ class Enjoy_your_meal_with(HTMLParser):
 
 
 
-New_object = Enjoy_your_meal_with()
+New_object = scrap_51offer()
 print "############### HERE THE TEST MAIN PAGES"
 New_object.thank_you_for_your_school_51offer()
 print "############### HERE THE TEST ON A SCHOOL PAGE"
