@@ -88,9 +88,8 @@ class parse_csv_file():
 		df.to_sql(pg_table, engine, index=True, index_label=index_name, if_exists='append')
 
 
-# Import_crm_tables =  parse_csv_file()
+Import_crm_tables =  parse_csv_file()
 # Import_crm_tables.import_the_table('/home/vagrant/sails_api_newpathway/DBCRM/school.csv','school')
 # Import_crm_tables.import_the_table('/home/vagrant/sails_api_newpathway/DBCRM/Major.csv','major')
-# Go =  Import_sales_tables()
-# Go.import_the_table()
-#Go.table_change_name()
+Import_crm_tables.import_the_table('/home/vagrant/sails_api_newpathway/DBCRM/TSchoolBe.csv','tschoolbe','school_id')
+

@@ -37,7 +37,7 @@ class scrap_mymajor_website(HTMLParser):
 
 		cr = conn.cursor()
 
-		query_create_table = "CREATE TABLE mymajor_school (school_id serial, english_name varchar(150) NOT NULL, chinese_name varchar(150), logo varchar(250), rank integer, country varchar(50), location varchar(50), city varchar(50), tuition_fees varchar, SAT_score decimal, introduction text, world_ranking varchar, national_ranking varchar, cost_of_living varchar, teaching_type text, link varchar, address text)"  
+		query_create_table = "CREATE TABLE mymajor_school (school_id serial, english_name varchar(150) NOT NULL, chinese_name varchar(150), logo varchar(250), rank integer, country varchar(50), location varchar(50), city varchar(50), tuition_fees varchar, SAT_score decimal, introduction text, world_ranking varchar, national_ranking varchar, cost_of_living varchar, teaching_type text, link varchar, address text, acronym varchar)"  
 
 		query_create_table_index = "CREATE UNIQUE INDEX school_id ON mymajor_school (school_id);"  
 
@@ -127,7 +127,7 @@ class scrap_mymajor_website(HTMLParser):
 
 		cr = conn.cursor()
 
-		query_create_table = "CREATE TABLE mymajor_many2manytable (major_id integer NOT NULL, school_id integer NOT NULL, FOREIGN KEY (major_id) REFERENCES mymajor_major (major_id), FOREIGN KEY (school_id) REFERENCES mymajor_school (school_id))"  
+		query_create_table = "CREATE TABLE mymajor_many2manytable (major_id integer NOT NULL, school_id integer NOT NULL, degree_type_id integer NOT NULL, FOREIGN KEY (major_id) REFERENCES mymajor_major (major_id), FOREIGN KEY (school_id) REFERENCES mymajor_school (school_id), FOREIGN KEY (degree_type_id) REFERENCES mymajor_degree_type (degree_type_id))"  
 
 		# FIRST WE CHECK IF THE TABLE ALREADY EXISTS
 
@@ -154,6 +154,40 @@ class scrap_mymajor_website(HTMLParser):
 		conn.commit()
 		conn.close()	
 
+	def create_degree_type_table(self):
+
+		conn = self.connect()	
+
+		cr = conn.cursor()
+
+		query_create_table = "CREATE TABLE mymajor_degree_type (degree_type_id serial PRIMARY KEY, english_name varchar NOT NULL, chinese_name varchar, duration varchar, introduction text)"  
+
+		# FIRST WE CHECK IF THE TABLE ALREADY EXISTS
+
+		query_test = "select exists(select relname from pg_class where relname = 'mymajor_degree_type' and relkind='r')"
+
+		try:
+
+			cr.execute(query_test)
+
+		except Exception, e:
+
+			print 'Ouppppppssss the query did failled... Here the reason: ', e
+
+		if cr.fetchall()[0][0] == False:
+
+			try:
+
+				cr.execute(query_create_table)
+
+				print 'you created you table'
+
+			except Exception, e:
+
+				print 'Ouppppppssss we cannot create this table.... Here the reason: ', e
+
+		conn.commit()
+		conn.close()	
 
 	def thank_you_for_your_schools_mymajor(self):
 
@@ -235,13 +269,13 @@ class scrap_mymajor_website(HTMLParser):
 
 					else:
 
-						print "Exists"
+						print "School Exists"
 
 						try:
 
 							cr.execute(query_update , (english_name.encode("utf-8").strip(), link.encode("utf-8").strip(), complete_address.encode("utf-8").strip(), city.encode("utf-8").strip(), logo.encode("utf-8").strip(), english_name.encode("utf-8").strip(),))
 
-							print "Is Being updated"
+							print "School Is Being updated"
 
 						except Exception, e:
 
@@ -286,423 +320,290 @@ class scrap_mymajor_website(HTMLParser):
 
 			links = cr.fetchall()
 
-			for link in links:
+			for idx, val in enumerate(links):
 
-				new_link = link[1]
+				if val[2] > 3515:
 
-				new_link= new_link.replace(".","-")
+					new_link = val[1]
 
-				school_detail = str(root_url) + '/' + str(new_link)
+					new_link= new_link.replace(".","-")
 
-				print school_detail
+					school_detail = str(root_url) + '/' + str(new_link)
 
-				school_detail = school_detail.replace("'","-")
+					print school_detail
 
-				school_detail = school_detail.replace("--","-")
+					school_detail = school_detail.replace("'","-")
 
-				school_detail = school_detail.replace("-(the)","")
+					school_detail = school_detail.replace("--","-")
 
-				major_details =  school_detail + 'majors/'
+					school_detail = school_detail.replace("-(the)","")
 
-				print school_detail, major_details
+					major_details =  school_detail + 'majors/'
 
-				response_school = requests.get(school_detail)
+					print school_detail, major_details
 
-				if response_school:
+					response_school = requests.get(school_detail)
 
-					soup = bs4.BeautifulSoup(response_school.text, "lxml")
+					if response_school:
 
-					tuition_fees = soup.select('td.net-items h2')[0]
+						soup = bs4.BeautifulSoup(response_school.text, "lxml")
 
-					tuition_fees.hidden = True
+						if soup.select('td.net-items h2'):
 
-					introduction_container = soup.select('.post.col-md-8.col-sm-12.col-xs-12 p.lead')
+							tuition_fees = soup.select('td.net-items h2')[0]
 
-					introduction1 = introduction_container[0]
+							tuition_fees.hidden = True
 
-					introduction1.hidden = True
+						else:
 
-					introduction2 = introduction_container[1]
+							tuition_fees = 'Not communicated'
 
-					introduction2.hidden = True
+						if soup.select('.post.col-md-8.col-sm-12.col-xs-12 p.lead'):
 
-					introduction3 = introduction_container[2]
+							introduction_container = soup.select('.post.col-md-8.col-sm-12.col-xs-12 p.lead')
 
-					introduction3.hidden = True
+							introduction1 = introduction_container[0]
 
-					introduction = str(introduction1.encode("utf-8").strip()) + str(introduction2.encode("utf-8").strip()) + str(introduction3.encode("utf-8").strip())
+							introduction1.hidden = True
 
-					query_update = "UPDATE mymajor_school SET (introduction, tuition_fees) = (%s, %s) WHERE school_id = %s"
+							introduction2 = introduction_container[1]
 
-					try:
+							introduction2.hidden = True
 
-						cr.execute(query_update, (str(introduction), tuition_fees.encode("utf-8").strip(), link[2],))
+							introduction3 = introduction_container[2]
 
-					except Exception, e:
+							introduction3.hidden = True
 
-						print 'Ouppppppssss the update did fail... Here the reason: ', e
+							introduction = str(introduction1.encode("utf-8").strip()) + str(introduction2.encode("utf-8").strip()) + str(introduction3.encode("utf-8").strip())
 
-					response_major = requests.get(major_details)
+						else:
 
-					new_soup = bs4.BeautifulSoup(response_major.text, "lxml")
+							introduction = 'Not communicated'
 
-					majors = new_soup.select('tr.MasRow td a')
-
-					for major in majors:
-
-						major.hidden = True
-
-						query_majors = "SELECT major_id FROM mymajor_major WHERE english_name=%s"
+						query_update = "UPDATE mymajor_school SET (introduction, tuition_fees) = (%s, %s) WHERE school_id = %s"
 
 						try:
 
-							cr.execute(query_majors, (str(major), ))
+							cr.execute(query_update, (str(introduction), tuition_fees.encode("utf-8").strip(), val[2],))
 
 						except Exception, e:
 
-							print 'Ouppppppssss the query did failled... Here the reason: ', e
+							print 'Ouppppppssss the update did fail... Here the reason: ', e
 
-						this_major = cr.fetchone()
+						response_major = requests.get(major_details)
 
-						if this_major:
+						if response_major:
 
-							query_verification = "SELECT COUNT(*) FROM mymajor_many2manytable WHERE major_id = %s AND school_id = %s"
+							new_soup = bs4.BeautifulSoup(response_major.text, "lxml")
 
-							query_creation = "INSERT INTO mymajor_many2manytable (major_id,  school_id) VALUES (%s, %s)"
+							list_of_possible_css = ['tr.MasRow td', 'tr.AssRow.CerRow td', 'tr.BacRow td', 'tr.BacRow.CerRow td', 'tr.AssRow td', 'tr.CerRow td']
 
-							try:
+							major_nb = 0
 
-								cr.execute(query_verification, (int(this_major[0]), int(link[2]),))
+							majors_available = 0
 
-								test = cr.fetchall()
+							for css_option in list_of_possible_css:
 
-								test = test[0][0]
+								majors = new_soup.select(css_option + ' a')
 
-								if int(test) == 0:
+								majors_available 
 
-									try:
+								print '##############################################################: ', len(majors)
 
-										cr.execute(query_creation , (int(this_major[0]), int(link[2]),))
+								for idx, value in enumerate(new_soup.select(css_option)):
 
-										print 'You have created one many 2 many relation'
+									if len(majors) > 0:
 
-									except Exception, e:
+										if idx < 6:
 
-										print ("############ the insertion failed, here the error:", e)
+											if idx == 0:
 
-										err += 1
+												major_found = value.select('a')[0]
 
-								else:
+											value.hidden = True
 
-									print "Exists"
+											major_found.hidden = True
 
+											if value.select('span'):
 
-							except Exception, e:
+												major_nb += 1
 
-								print "your request failled sorry, here the reason: ", e
+												query_fetch_major = "SELECT major_id FROM mymajor_major WHERE english_name = %s"
 
-								err += 1
+												try:
 
-							conn.commit()
+													cr.execute(query_fetch_major, (str(major_found), ))
 
-					majors = new_soup.select('tr.AssRow.CerRow td a')
+													this_major_id = cr.fetchone()
 
-					for major in majors:
+												except Exception, e:
 
-						major.hidden = True
+													print 'We cannot fetch this major, here is the reason: ', e
 
-						query_majors = "SELECT major_id FROM mymajor_major WHERE english_name=%s"
+												if this_major_id is not None:
 
-						try:
+													query_relation_exit = "SELECT * FROM mymajor_many2manytable WHERE major_id= %s AND school_id = %s AND degree_type_id = %s"
 
-							cr.execute(query_majors, (str(major), ))
+													query_insert_relation = "INSERT INTO mymajor_many2manytable (major_id, school_id, degree_type_id) VALUES (%s, %s, %s)"
 
-						except Exception, e:
+													try:
 
-							print 'Ouppppppssss the query did failled... Here the reason: ', e
+														cr.execute(query_relation_exit, (this_major_id[0], val[2], idx, ))
 
-						this_major = cr.fetchone()
+														if cr.fetchone() is None:
 
-						if this_major:
+															try:
 
-							query_verification = "SELECT COUNT(*) FROM mymajor_many2manytable WHERE major_id = %s AND school_id = %s"
+																cr.execute(query_insert_relation, (this_major_id[0], val[2], idx, ))
 
-							query_creation = "INSERT INTO mymajor_many2manytable (major_id,  school_id) VALUES (%s, %s)"
+																print 'You did create a new relation'
 
-							try:
+															except Exception, e:
 
-								cr.execute(query_verification, (int(this_major[0]), int(link[2]),))
+																print 'We couldnt execute the insertion, here are the reasons: ', e
 
-								test = cr.fetchall()
+														else:
 
-								test = test[0][0]
+															print 'Relation already exists'
 
-								if int(test) == 0:
+													except Exception, e:
 
-									try:
+														print 'We couldnt execute the select query, here are the reasons: ', e
 
-										cr.execute(query_creation , (int(this_major[0]), int(link[2]),))
+														
+													print '############################# A NEW RELATION WILL BE CREATED WITH THIS MAJOR : ', major_found, 'and its ID: ', this_major_id[0], '  and the school id:  ', val[2], '  and the degree id   ', idx
 
-										print 'You have created one many 2 many relation'
+													conn.commit()
 
-									except Exception, e:
+										if idx >= 6:
 
-										print ("############ the insertion failed, here the error:", e)
+											new_figure = idx % 6
 
-										err += 1
+											if new_figure == 0:
 
-								else:
+												major_found = value.select('a')[0]
 
-									print "Exists"
+											value.hidden = True
 
+											major_found.hidden = True
 
-							except Exception, e:
+											if value.select('span'):
 
-								print "your request failled sorry, here the reason: ", e
+												major_nb += 1
 
-								err += 1
+												query_fetch_major = "SELECT major_id FROM mymajor_major WHERE english_name = %s"
 
-							conn.commit()		
+												try:
 
-					majors = new_soup.select('tr.BacRow td a')
+													cr.execute(query_fetch_major, (str(major_found), ))
 
-					for major in majors:
+													this_major_id = cr.fetchone()
 
-						major.hidden = True
+												except Exception, e:
 
-						query_majors = "SELECT major_id FROM mymajor_major WHERE english_name=%s"
+													print 'We cannot fetch this major, here is the reason: ', e
 
-						try:
+												if this_major_id is not None:
 
-							cr.execute(query_majors, (str(major), ))
+													query_relation_exit = "SELECT * FROM mymajor_many2manytable WHERE major_id= %s AND school_id = %s AND degree_type_id = %s"
 
-						except Exception, e:
+													query_insert_relation = "INSERT INTO mymajor_many2manytable (major_id, school_id, degree_type_id) VALUES (%s, %s, %s)"
 
-							print 'Ouppppppssss the query did failled... Here the reason: ', e
+													try:
 
-						this_major = cr.fetchone()
+														cr.execute(query_relation_exit, (this_major_id[0], val[2], new_figure, ))
 
-						if this_major:
+														if cr.fetchone() is None:
 
-							query_verification = "SELECT COUNT(*) FROM mymajor_many2manytable WHERE major_id = %s AND school_id = %s"
+															try:
 
-							query_creation = "INSERT INTO mymajor_many2manytable (major_id,  school_id) VALUES (%s, %s)"
+																cr.execute(query_insert_relation, (this_major_id[0], val[2], new_figure, ))
 
-							try:
+																print 'You did create a new relation'
 
-								cr.execute(query_verification, (int(this_major[0]), int(link[2]),))
+															except Exception, e:
 
-								test = cr.fetchall()
+																print 'We couldnt execute the insertion, here are the reasons: ', e
 
-								test = test[0][0]
+														else:
 
-								if int(test) == 0:
+															print 'Relation already exists'
 
-									try:
+													except Exception, e:
 
-										cr.execute(query_creation , (int(this_major[0]), int(link[2]),))
+														print 'We couldnt execute the select query, here are the reasons: ', e
 
-										print 'You have created one many 2 many relation'
+														
 
-									except Exception, e:
+													print '############################# A NEW RELATION WILL BE CREATED WITH THIS MAJOR : ', major_found, 'and its ID: ', this_major_id[0], '  and the school id:  ', val[2], '  and the degree id   ', new_figure
 
-										print ("############ the insertion failed, here the error:", e)
+													conn.commit()
 
-										err += 1
+							#print major_nb
 
-								else:
+								# for major in majors:
 
-									print "Exists"
+								# 	major.hidden = True
 
+								# 	query_majors = "SELECT major_id FROM mymajor_major WHERE english_name=%s"
 
-							except Exception, e:
+								# 	try:
 
-								print "your request failled sorry, here the reason: ", e
+								# 		cr.execute(query_majors, (str(major), ))
 
-								err += 1
+								# 	except Exception, e:
 
-							conn.commit()				
+								# 		print 'Ouppppppssss the query did failled... Here the reason: ', e
 
-					majors = new_soup.select('tr.BacRow.CerRow td a')
+								# 	this_major = cr.fetchone()
 
-					for major in majors:
+								# 	if this_major:
 
-						major.hidden = True
+								# 		query_verification = "SELECT COUNT(*) FROM mymajor_many2manytable WHERE major_id = %s AND school_id = %s"
 
-						query_majors = "SELECT major_id FROM mymajor_major WHERE english_name=%s"
+								# 		query_creation = "INSERT INTO mymajor_many2manytable (major_id,  school_id) VALUES (%s, %s)"
 
-						try:
+								# 		try:
 
-							cr.execute(query_majors, (str(major), ))
+								# 			cr.execute(query_verification, (int(this_major[0]), int(val[2]),))
 
-						except Exception, e:
+								# 			test = cr.fetchall()
 
-							print 'Ouppppppssss the query did failled... Here the reason: ', e
+								# 			test = test[0][0]
 
-						this_major = cr.fetchone()
+								# 			if int(test) == 0:
 
-						if this_major:
+								# 				try:
 
-							query_verification = "SELECT COUNT(*) FROM mymajor_many2manytable WHERE major_id = %s AND school_id = %s"
+								# 					cr.execute(query_creation , (int(this_major[0]), int(val[2]),))
 
-							query_creation = "INSERT INTO mymajor_many2manytable (major_id,  school_id) VALUES (%s, %s)"
+								# 					print 'You have created one many 2 many relation'
 
-							try:
+								# 				except Exception, e:
 
-								cr.execute(query_verification, (int(this_major[0]), int(link[2]),))
+								# 					print ("############ the insertion failed, here the error:", e)
 
-								test = cr.fetchall()
+								# 					err += 1
 
-								test = test[0][0]
+								# 			else:
 
-								if int(test) == 0:
+								# 				print "Exists"
 
-									try:
+								# 		except Exception, e:
 
-										cr.execute(query_creation , (int(this_major[0]), int(link[2]),))
+								# 			print "your request failled sorry, here the reason: ", e
 
-										print 'You have created one many 2 many relation'
+								# 			err += 1
 
-									except Exception, e:
+								# 		
 
-										print ("############ the insertion failed, here the error:", e)
+					else:
 
-										err += 1
+						print 'broken link'
 
-								else:
+		else:
 
-									print "Exists"
-
-
-							except Exception, e:
-
-								print "your request failled sorry, here the reason: ", e
-
-								err += 1
-
-							conn.commit()					
-
-					majors = new_soup.select('tr.AssRow td a')
-
-					for major in majors:
-
-						major.hidden = True
-
-						query_majors = "SELECT major_id FROM mymajor_major WHERE english_name=%s"
-
-						try:
-
-							cr.execute(query_majors, (str(major), ))
-
-						except Exception, e:
-
-							print 'Ouppppppssss the query did failled... Here the reason: ', e
-
-						this_major = cr.fetchone()
-
-						if this_major:
-
-							query_verification = "SELECT COUNT(*) FROM mymajor_many2manytable WHERE major_id = %s AND school_id = %s"
-
-							query_creation = "INSERT INTO mymajor_many2manytable (major_id,  school_id) VALUES (%s, %s)"
-
-							try:
-
-								cr.execute(query_verification, (int(this_major[0]), int(link[2]),))
-
-								test = cr.fetchall()
-
-								test = test[0][0]
-
-								if int(test) == 0:
-
-									try:
-
-										cr.execute(query_creation , (int(this_major[0]), int(link[2]),))
-
-										print 'You have created one many 2 many relation'
-
-									except Exception, e:
-
-										print ("############ the insertion failed, here the error:", e)
-
-										err += 1
-
-								else:
-
-									print "Exists"
-
-
-							except Exception, e:
-
-								print "your request failled sorry, here the reason: ", e
-
-								err += 1
-
-							conn.commit()		
-
-					majors = new_soup.select('tr.CerRow td a')
-
-					for major in majors:
-
-						major.hidden = True
-
-						query_majors = "SELECT major_id FROM mymajor_major WHERE english_name=%s"
-
-						try:
-
-							cr.execute(query_majors, (str(major), ))
-
-						except Exception, e:
-
-							print 'Ouppppppssss the query did failled... Here the reason: ', e
-
-						this_major = cr.fetchone()
-
-						if this_major:
-
-							query_verification = "SELECT COUNT(*) FROM mymajor_many2manytable WHERE major_id = %s AND school_id = %s"
-
-							query_creation = "INSERT INTO mymajor_many2manytable (major_id,  school_id) VALUES (%s, %s)"
-
-							try:
-
-								cr.execute(query_verification, (int(this_major[0]), int(link[2]),))
-
-								test = cr.fetchall()
-
-								test = test[0][0]
-
-								if int(test) == 0:
-
-									try:
-
-										cr.execute(query_creation , (int(this_major[0]), int(link[2]),))
-
-										print 'You have created one many 2 many relation'
-
-									except Exception, e:
-
-										print ("############ the insertion failed, here the error:", e)
-
-										err += 1
-
-								else:
-
-									print "Exists"
-
-
-							except Exception, e:
-
-								print "your request failled sorry, here the reason: ", e
-
-								err += 1
-
-							conn.commit()		
-
-				else:
-
-					print 'broken link'
+				print 'broken link'
 
 		conn.close()
 
@@ -767,7 +668,7 @@ class scrap_mymajor_website(HTMLParser):
 
 					else:
 
-						print "Exists"
+						print "Major Exists"
 
 						try:
 
@@ -799,10 +700,6 @@ class scrap_mymajor_website(HTMLParser):
 		conn = self.connect()	
 
 		cr = conn.cursor()
-
-		nbr_major = 0
-
-		err = 0
 
 		query_majors = "SELECT major_id, link FROM mymajor_major ORDER BY major_id"
 
@@ -856,11 +753,9 @@ class scrap_mymajor_website(HTMLParser):
 
 							print ("############ HERE THE error:", e)
 
-							err += 1
-
 					else:
 
-						print "Exists"
+						print "Major Exists"
 
 						try:
 
@@ -872,13 +767,10 @@ class scrap_mymajor_website(HTMLParser):
 
 							print ("############ HERE THE error:", e)
 
-							err += 1
-
 				except Exception, e:
 
 					print "your request failled sorry, here the reason: ", e
 
-					err += 1
 
 				page_schools = str(root_url) + str(name_link)
 
@@ -895,14 +787,75 @@ class scrap_mymajor_website(HTMLParser):
 		conn.close()	
 
 
+	def get_degree_type(self):
+
+		self.create_degree_type_table()
+
+		conn = self.connect()	
+
+		cr = conn.cursor()
+
+		page = str(root_url) + '/college/ca/academy-of-art-university/majors/'
+
+		response = requests.get(page)
+
+		soup = bs4.BeautifulSoup(response.text, "lxml")
+
+		degree_type = soup.select("th.rotate span")
+
+		for idx, val in enumerate(degree_type):
+
+			if idx < 5:
+
+				val.hidden = True
+
+				query_test = "SELECT * FROM mymajor_degree_type WHERE english_name = %s"
+
+				try:
+
+					cr.execute(query_test, (str(val), ))
+
+				except Exception, e:
+
+					print "Your request for selection did fail, here is the reason: ", e
+
+				test = cr.fetchone()
+
+				if test is None:
+
+					query_insertion = "INSERT INTO mymajor_degree_type(english_name) VALUES (%s)"
+
+					try:
+
+						cr.execute(query_insertion, (str(val), ))
+
+					except Exception, e:
+
+						print "Your insertion did fail, here is the reason: ", e
+
+				else:
+
+					print 'Degree type Exists'
+
+		conn.commit()
+
+		conn.close()	
+
+
+
+
+
 
 
 New_object = scrap_mymajor_website()
-#New_object.thank_you_for_your_schools_mymajor()
-# print "############### HERE THE TEST ON A SCHOOL PAGE"
-New_object.get_the_school_detail_page()
-# print "############### HERE THE TEST ON A MAJOR GLOBAL PAGE"
 # New_object.get_the_majors()
 # print "############### HERE THE TEST ON A MAJOR DETAIL PAGE"
+# New_object.get_degree_type()
+# print "############### HERE THE TEST ON A MAJOR DETAIL PAGE"
 # New_object.get_major_details()
+# print "############### HERE THE TEST ON A MAJOR GLOBAL PAGE"
+# New_object.thank_you_for_your_schools_mymajor()
+# print "############### HERE THE TEST ON A SCHOOL PAGE"
+New_object.get_the_school_detail_page()
+
 
