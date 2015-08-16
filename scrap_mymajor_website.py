@@ -18,7 +18,7 @@ class scrap_mymajor_website(HTMLParser):
 
 	root_url = 'http://www.mymajors.com'
 
-	pg_table = 'mymajor_major'
+	pg_table = 'degree_type'
 
 	def connect(self):
 		conn_string = "host='localhost' dbname='test' user='postgres' password='Password1!'"
@@ -31,64 +31,19 @@ class scrap_mymajor_website(HTMLParser):
 		#cr = conn.cursor()
 		return conn 
 
-	def create_school_table(self):
-
-		conn = self.connect()	
-
-		cr = conn.cursor()
-
-		query_create_table = "CREATE TABLE mymajor_school (school_id serial, english_name varchar(150) NOT NULL, chinese_name varchar(150), logo varchar(250), rank integer, country varchar(50), location varchar(50), city varchar(50), tuition_fees varchar, SAT_score decimal, introduction text, world_ranking varchar, national_ranking varchar, cost_of_living varchar, teaching_type text, link varchar, address text, acronym varchar)"  
-
-		query_create_table_index = "CREATE UNIQUE INDEX school_id ON mymajor_school (school_id);"  
-
-		# FIRST WE CHECK IF THE TABLE ALREADY EXISTS
-
-		query_test = "select exists(select relname from pg_class where relname = 'mymajor_school' and relkind='r')"
-
-		try:
-
-			cr.execute(query_test)
-
-		except Exception, e:
-
-			print 'Ouppppppssss the query did failled... Here the reason: ', e
-
-		if cr.fetchall()[0][0] == False:
-
-			try:
-
-				cr.execute(query_create_table)
-
-				try:
-
-					exist = cr.execute(query_create_table_index)
-
-					print 'you created you table'
-
-				except Exception, e:
-
-					print 'Ouppppppssss could create the index... Here the reason: ', e
-
-			except Exception, e:
-
-				print 'Ouppppppssss we cannot create this table.... Here the reason: ', e
-
-		conn.commit()
-		conn.close()		
-
 	def create_major_table(self):
 
 		conn = self.connect()	
 
 		cr = conn.cursor()
 
-		query_create_table = "CREATE TABLE mymajor_major (major_id serial, english_name varchar NOT NULL, chinese_name varchar, degree_type varchar, link varchar, introduction text)"  
+		query_create_table = "CREATE TABLE major (major_id serial, english_name varchar NOT NULL, chinese_name varchar, major_category_id varchar, link varchar, major_profile text, FOREIGN KEY (major_category_id))"  
 
-		query_create_table_index = "CREATE UNIQUE INDEX major_id ON mymajor_major (major_id);"  
+		query_create_table_index = "CREATE UNIQUE INDEX major_id ON degree_type (major_id);"  
 
 		# FIRST WE CHECK IF THE TABLE ALREADY EXISTS
 
-		query_test = "select exists(select relname from pg_class where relname = 'mymajor_major' and relkind='r')"
+		query_test = "select exists(select relname from pg_class where relname = 'degree_type' and relkind='r')"
 
 		try:
 
@@ -127,11 +82,11 @@ class scrap_mymajor_website(HTMLParser):
 
 		cr = conn.cursor()
 
-		query_create_table = "CREATE TABLE mymajor_many2manytable (major_id integer NOT NULL, school_id integer NOT NULL, degree_type_id integer NOT NULL, FOREIGN KEY (major_id) REFERENCES mymajor_major (major_id), FOREIGN KEY (school_id) REFERENCES mymajor_school (school_id), FOREIGN KEY (degree_type_id) REFERENCES mymajor_degree_type (degree_type_id))"  
+		query_create_table = "CREATE TABLE many2manytable (major_id integer NOT NULL, school_id integer NOT NULL, degree_type_id integer NOT NULL, FOREIGN KEY (major_id) REFERENCES major (major_id), FOREIGN KEY (school_id) REFERENCES school (school_id), FOREIGN KEY (degree_type_id) REFERENCES degree_type (degree_type_id))"  
 
 		# FIRST WE CHECK IF THE TABLE ALREADY EXISTS
 
-		query_test = "select exists(select relname from pg_class where relname = 'mymajor_many2manytable' and relkind='r')"
+		query_test = "select exists(select relname from pg_class where relname = 'many2manytable' and relkind='r')"
 
 		try:
 
@@ -160,11 +115,11 @@ class scrap_mymajor_website(HTMLParser):
 
 		cr = conn.cursor()
 
-		query_create_table = "CREATE TABLE mymajor_degree_type (degree_type_id serial PRIMARY KEY, english_name varchar NOT NULL, chinese_name varchar, duration varchar, introduction text)"  
+		query_create_table = "CREATE TABLE degree_type (degree_type_id serial PRIMARY KEY, english_name varchar NOT NULL, chinese_name varchar, duration varchar, introduction text)"  
 
 		# FIRST WE CHECK IF THE TABLE ALREADY EXISTS
 
-		query_test = "select exists(select relname from pg_class where relname = 'mymajor_degree_type' and relkind='r')"
+		query_test = "select exists(select relname from pg_class where relname = 'degree_type' and relkind='r')"
 
 		try:
 
@@ -197,8 +152,6 @@ class scrap_mymajor_website(HTMLParser):
 
 		cr = conn.cursor()
 
-		err = 0
-
 		for i in range(800):
 
 			page = str(root_url) + "/AJAX_College_Search_Results?pagenumber=" + str(i)
@@ -211,61 +164,21 @@ class scrap_mymajor_website(HTMLParser):
 
 			for schools in range(len(schools)):
 
-				logo = soup.select('div.row .col-md-2.text-center a img')[schools].get('src',None)
-
-				logo = logo.replace('../','')
-
 				link = soup.select('div.row .col-md-2.text-center a')[schools].get('href',None)
 
-				link = link.replace('../','')
+				print '####### link: ', link,
 
-				english_name = soup.select('div.row .col-md-7 h3 a')[schools]
+				query_verification = "SELECT * FROM school WHERE english_name = %s"
 
-				english_name.hidden = True
-
-				city = soup.select('div.row .col-md-7 address span')[4 * schools]
-
-				city.hidden = True
-
-				address = soup.select('div.row .col-md-7 span')[4*schools + 2]
-
-				address.hidden = True
-
-				region = soup.select('div.row .col-md-7 span')[4*schools + 1]
-
-				region.hidden = True
-
-				zip_code = soup.select('div.row .col-md-7 span')[4*schools + 3]
-
-				zip_code.hidden = True
-
-				complete_address = str(address) + ', ' + str(region) + ' ' + str(zip_code)
-
-				print '####### logo: ', logo, '####### link: ', link, '####### englishname: ', english_name, '####### city: ', city, '####### address: ', complete_address 
-
-				query_verification = "SELECT COUNT(*) FROM mymajor_school WHERE english_name = %s"
-
-				query_creation = "INSERT INTO mymajor_school (english_name, link ,address, city, logo) VALUES (%s, %s, %s, %s, %s)"
-
-				query_update = "UPDATE mymajor_school SET (english_name, link ,address, city, logo) = (%s, %s, %s, %s, %s) WHERE english_name = %s"
+				query_update = "UPDATE school SET (link) = (%s) WHERE english_name = %s"
 
 				try:
 
 					cr.execute(query_verification, (english_name.encode("utf-8").strip(),))
 
-					test = cr.fetchall()[0][0]
+					if cr.fetchall() is None:
 
-					if int(test) == 0:
-
-						try:
-
-							cr.execute(query_creation , (english_name.encode("utf-8").strip(), link.encode("utf-8").strip(), complete_address.encode("utf-8").strip(), city.encode("utf-8").strip(), logo.encode("utf-8").strip(),))
-
-						except Exception, e:
-
-							print ("############ HERE THE error:", e)
-
-							err += 1
+						print '######################### this '
 
 					else:
 
@@ -273,7 +186,7 @@ class scrap_mymajor_website(HTMLParser):
 
 						try:
 
-							cr.execute(query_update , (english_name.encode("utf-8").strip(), link.encode("utf-8").strip(), complete_address.encode("utf-8").strip(), city.encode("utf-8").strip(), logo.encode("utf-8").strip(), english_name.encode("utf-8").strip(),))
+							cr.execute(query_update , (link.encode("utf-8").strip(), english_name.encode("utf-8").strip(),))
 
 							print "School Is Being updated"
 
@@ -281,13 +194,9 @@ class scrap_mymajor_website(HTMLParser):
 
 							print ("############ HERE THE error:", e)
 
-							err += 1
-
 				except Exception, e:
 
 					print "your request failled sorry, here the reason: ", e
-
-					err += 1
 
 			conn.commit()
 
@@ -302,7 +211,7 @@ class scrap_mymajor_website(HTMLParser):
 
 		cr = conn.cursor()
 
-		query_link = "SELECT english_name, link, school_id FROM mymajor_school ORDER BY school_id ASC"
+		query_link = "SELECT english_name, link, school_id FROM school ORDER BY school_id ASC"
 
 		err = 0
 
@@ -322,7 +231,7 @@ class scrap_mymajor_website(HTMLParser):
 
 			for idx, val in enumerate(links):
 
-				if val[2] > 3515:
+			#	if val[2] > 6327:
 
 					new_link = val[1]
 
@@ -357,38 +266,6 @@ class scrap_mymajor_website(HTMLParser):
 						else:
 
 							tuition_fees = 'Not communicated'
-
-						if soup.select('.post.col-md-8.col-sm-12.col-xs-12 p.lead'):
-
-							introduction_container = soup.select('.post.col-md-8.col-sm-12.col-xs-12 p.lead')
-
-							introduction1 = introduction_container[0]
-
-							introduction1.hidden = True
-
-							introduction2 = introduction_container[1]
-
-							introduction2.hidden = True
-
-							introduction3 = introduction_container[2]
-
-							introduction3.hidden = True
-
-							introduction = str(introduction1.encode("utf-8").strip()) + str(introduction2.encode("utf-8").strip()) + str(introduction3.encode("utf-8").strip())
-
-						else:
-
-							introduction = 'Not communicated'
-
-						query_update = "UPDATE mymajor_school SET (introduction, tuition_fees) = (%s, %s) WHERE school_id = %s"
-
-						try:
-
-							cr.execute(query_update, (str(introduction), tuition_fees.encode("utf-8").strip(), val[2],))
-
-						except Exception, e:
-
-							print 'Ouppppppssss the update did fail... Here the reason: ', e
 
 						response_major = requests.get(major_details)
 
@@ -428,7 +305,7 @@ class scrap_mymajor_website(HTMLParser):
 
 												major_nb += 1
 
-												query_fetch_major = "SELECT major_id FROM mymajor_major WHERE english_name = %s"
+												query_fetch_major = "SELECT major_id FROM degree_type WHERE english_name = %s"
 
 												try:
 
@@ -442,9 +319,9 @@ class scrap_mymajor_website(HTMLParser):
 
 												if this_major_id is not None:
 
-													query_relation_exit = "SELECT * FROM mymajor_many2manytable WHERE major_id= %s AND school_id = %s AND degree_type_id = %s"
+													query_relation_exit = "SELECT * FROM many2manytable WHERE major_id= %s AND school_id = %s AND degree_type_id = %s"
 
-													query_insert_relation = "INSERT INTO mymajor_many2manytable (major_id, school_id, degree_type_id) VALUES (%s, %s, %s)"
+													query_insert_relation = "INSERT INTO many2manytable (major_id, school_id, degree_type_id) VALUES (%s, %s, %s)"
 
 													try:
 
@@ -491,7 +368,7 @@ class scrap_mymajor_website(HTMLParser):
 
 												major_nb += 1
 
-												query_fetch_major = "SELECT major_id FROM mymajor_major WHERE english_name = %s"
+												query_fetch_major = "SELECT major_id FROM degree_type WHERE english_name = %s"
 
 												try:
 
@@ -505,9 +382,9 @@ class scrap_mymajor_website(HTMLParser):
 
 												if this_major_id is not None:
 
-													query_relation_exit = "SELECT * FROM mymajor_many2manytable WHERE major_id= %s AND school_id = %s AND degree_type_id = %s"
+													query_relation_exit = "SELECT * FROM many2manytable WHERE major_id= %s AND school_id = %s AND degree_type_id = %s"
 
-													query_insert_relation = "INSERT INTO mymajor_many2manytable (major_id, school_id, degree_type_id) VALUES (%s, %s, %s)"
+													query_insert_relation = "INSERT INTO many2manytable (major_id, school_id, degree_type_id) VALUES (%s, %s, %s)"
 
 													try:
 
@@ -538,64 +415,6 @@ class scrap_mymajor_website(HTMLParser):
 													print '############################# A NEW RELATION WILL BE CREATED WITH THIS MAJOR : ', major_found, 'and its ID: ', this_major_id[0], '  and the school id:  ', val[2], '  and the degree id   ', new_figure
 
 													conn.commit()
-
-							#print major_nb
-
-								# for major in majors:
-
-								# 	major.hidden = True
-
-								# 	query_majors = "SELECT major_id FROM mymajor_major WHERE english_name=%s"
-
-								# 	try:
-
-								# 		cr.execute(query_majors, (str(major), ))
-
-								# 	except Exception, e:
-
-								# 		print 'Ouppppppssss the query did failled... Here the reason: ', e
-
-								# 	this_major = cr.fetchone()
-
-								# 	if this_major:
-
-								# 		query_verification = "SELECT COUNT(*) FROM mymajor_many2manytable WHERE major_id = %s AND school_id = %s"
-
-								# 		query_creation = "INSERT INTO mymajor_many2manytable (major_id,  school_id) VALUES (%s, %s)"
-
-								# 		try:
-
-								# 			cr.execute(query_verification, (int(this_major[0]), int(val[2]),))
-
-								# 			test = cr.fetchall()
-
-								# 			test = test[0][0]
-
-								# 			if int(test) == 0:
-
-								# 				try:
-
-								# 					cr.execute(query_creation , (int(this_major[0]), int(val[2]),))
-
-								# 					print 'You have created one many 2 many relation'
-
-								# 				except Exception, e:
-
-								# 					print ("############ the insertion failed, here the error:", e)
-
-								# 					err += 1
-
-								# 			else:
-
-								# 				print "Exists"
-
-								# 		except Exception, e:
-
-								# 			print "your request failled sorry, here the reason: ", e
-
-								# 			err += 1
-
-								# 		
 
 					else:
 
@@ -642,11 +461,11 @@ class scrap_mymajor_website(HTMLParser):
 
 				nbr_major += 1
 
-				query_verification = "SELECT COUNT(*) FROM mymajor_major WHERE english_name = %s"
+				query_verification = "SELECT COUNT(*) FROM major WHERE english_name = %s"
 
-				query_creation = "INSERT INTO mymajor_major (english_name, link ) VALUES (%s, %s)"
+				query_creation = "INSERT INTO major (english_name, link ) VALUES (%s, %s)"
 
-				query_update = "UPDATE mymajor_major SET (english_name, link ) = (%s, %s) WHERE english_name = %s"
+				query_update = "UPDATE major SET (english_name, link ) = (%s, %s) WHERE english_name = %s"
 
 				try:
 
@@ -701,7 +520,7 @@ class scrap_mymajor_website(HTMLParser):
 
 		cr = conn.cursor()
 
-		query_majors = "SELECT major_id, link FROM mymajor_major ORDER BY major_id"
+		query_majors = "SELECT major_id, link FROM major ORDER BY major_id"
 
 		try:
 
@@ -731,11 +550,11 @@ class scrap_mymajor_website(HTMLParser):
 
 				name_link = name_link.replace(name_major,name_major + '-Major/')
 
-				query_verification = "SELECT COUNT(*) FROM mymajor_major WHERE link = %s"
+				query_verification = "SELECT COUNT(*) FROM major WHERE link = %s"
 
-				query_creation = "INSERT INTO mymajor_major (introduction ) VALUES (%s)"
+				query_creation = "INSERT INTO major (major_profile ) VALUES (%s)"
 
-				query_update = "UPDATE mymajor_major SET introduction=%s WHERE link = %s"
+				query_update = "UPDATE major SET major_profile=%s WHERE link = %s"
 
 				try:
 
@@ -809,7 +628,7 @@ class scrap_mymajor_website(HTMLParser):
 
 				val.hidden = True
 
-				query_test = "SELECT * FROM mymajor_degree_type WHERE english_name = %s"
+				query_test = "SELECT * FROM degree_type WHERE english_name = %s"
 
 				try:
 
@@ -823,7 +642,7 @@ class scrap_mymajor_website(HTMLParser):
 
 				if test is None:
 
-					query_insertion = "INSERT INTO mymajor_degree_type(english_name) VALUES (%s)"
+					query_insertion = "INSERT INTO degree_type (english_name) VALUES (%s)"
 
 					try:
 
@@ -847,15 +666,15 @@ class scrap_mymajor_website(HTMLParser):
 
 
 
-New_object = scrap_mymajor_website()
-# New_object.get_the_majors()
-# print "############### HERE THE TEST ON A MAJOR DETAIL PAGE"
-# New_object.get_degree_type()
-# print "############### HERE THE TEST ON A MAJOR DETAIL PAGE"
-# New_object.get_major_details()
-# print "############### HERE THE TEST ON A MAJOR GLOBAL PAGE"
-# New_object.thank_you_for_your_schools_mymajor()
-# print "############### HERE THE TEST ON A SCHOOL PAGE"
-New_object.get_the_school_detail_page()
+# New_object = scrap_mymajor_website()
+# # New_object.get_the_majors()
+# # print "############### HERE THE TEST ON A MAJOR DETAIL PAGE"
+# # New_object.get_degree_type()
+# # print "############### HERE THE TEST ON A MAJOR DETAIL PAGE"
+# # New_object.get_major_details()
+# # print "############### HERE THE TEST ON A MAJOR GLOBAL PAGE"
+# # New_object.thank_you_for_your_schools_mymajor()
+# # print "############### HERE THE TEST ON A SCHOOL PAGE"
+# New_object.get_the_school_detail_page()
 
 

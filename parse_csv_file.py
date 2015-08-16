@@ -91,5 +91,5 @@ class parse_csv_file():
 Import_crm_tables =  parse_csv_file()
 # Import_crm_tables.import_the_table('/home/vagrant/sails_api_newpathway/DBCRM/school.csv','school')
 # Import_crm_tables.import_the_table('/home/vagrant/sails_api_newpathway/DBCRM/Major.csv','major')
-Import_crm_tables.import_the_table('/home/vagrant/sails_api_newpathway/DBCRM/TSchoolBe.csv','tschoolbe','school_id')
+Import_crm_tables.import_the_table('/home/vagrant/sails_api_newpathway/DBCRM/TSchoolBe.csv','tschoolbe','school_2_id')
 
