@@ -37,13 +37,13 @@ class scrap_mymajor_website(HTMLParser):
 
 		cr = conn.cursor()
 
-		query_create_table = "CREATE TABLE major (major_id serial, english_name varchar NOT NULL, chinese_name varchar, major_category_id varchar, link varchar, major_profile text, FOREIGN KEY (major_category_id))"  
+		query_create_table = "CREATE TABLE major (major_id serial PRIMARY KEY, english_name varchar NOT NULL, chinese_name varchar, major_category_id integer, link varchar, major_profile text, FOREIGN KEY (major_category_id) REFERENCES major_category(major_category_id))"  
 
-		query_create_table_index = "CREATE UNIQUE INDEX major_id ON degree_type (major_id);"  
+		# query_create_table_index = "CREATE UNIQUE INDEX major_id ON degree_type (major_id);"  
 
 		# FIRST WE CHECK IF THE TABLE ALREADY EXISTS
 
-		query_test = "select exists(select relname from pg_class where relname = 'degree_type' and relkind='r')"
+		query_test = "select exists(select relname from pg_class where relname = 'major' and relkind='r')"
 
 		try:
 
@@ -59,15 +59,7 @@ class scrap_mymajor_website(HTMLParser):
 
 				cr.execute(query_create_table)
 
-				try:
-
-					exist = cr.execute(query_create_table_index)
-
-					print 'you created you table'
-
-				except Exception, e:
-
-					print 'Ouppppppssss could create the index... Here the reason: ', e
+				print 'You created the major table'
 
 			except Exception, e:
 
@@ -82,7 +74,7 @@ class scrap_mymajor_website(HTMLParser):
 
 		cr = conn.cursor()
 
-		query_create_table = "CREATE TABLE many2manytable (major_id integer NOT NULL, school_id integer NOT NULL, degree_type_id integer NOT NULL, FOREIGN KEY (major_id) REFERENCES major (major_id), FOREIGN KEY (school_id) REFERENCES school (school_id), FOREIGN KEY (degree_type_id) REFERENCES degree_type (degree_type_id))"  
+		query_create_table = "CREATE TABLE many2manytable (major_id integer NOT NULL, school_id integer NOT NULL, degree_type_id integer NOT NULL, FOREIGN KEY (major_id) REFERENCES major (major_id), FOREIGN KEY (school_id) REFERENCES schools (school_id), FOREIGN KEY (degree_type_id) REFERENCES degree_type (degree_type_id))"  
 
 		# FIRST WE CHECK IF THE TABLE ALREADY EXISTS
 
@@ -107,7 +99,42 @@ class scrap_mymajor_website(HTMLParser):
 				print 'Ouppppppssss we cannot create this table.... Here the reason: ', e
 
 		conn.commit()
-		conn.close()	
+		conn.close()
+
+	def create_major_category(self):
+
+		conn = self.connect()	
+
+		cr = conn.cursor()
+
+		query_create_table = "CREATE TABLE major_category (major_category_id serial PRIMARY KEY, english_name varchar NOT NULL, chinese_name varchar, major_category_profile text)"  
+
+		# FIRST WE CHECK IF THE TABLE ALREADY EXISTS
+
+		query_test = "select exists(select relname from pg_class where relname = 'degree_type' and relkind='r')"
+
+		try:
+
+			cr.execute(query_test)
+
+		except Exception, e:
+
+			print 'Ouppppppssss the query did failled... Here the reason: ', e
+
+		if cr.fetchall()[0][0] == False:
+
+			try:
+
+				cr.execute(query_create_table)
+
+				print 'you created you table'
+
+			except Exception, e:
+
+				print 'Ouppppppssss we cannot create this table.... Here the reason: ', e
+
+		conn.commit()
+		conn.close()		
 
 	def create_degree_type_table(self):
 
@@ -146,7 +173,7 @@ class scrap_mymajor_website(HTMLParser):
 
 	def thank_you_for_your_schools_mymajor(self):
 
-		self.create_school_table()
+		# self.create_school_table()
 
 		conn = self.connect()	
 
@@ -166,37 +193,45 @@ class scrap_mymajor_website(HTMLParser):
 
 				link = soup.select('div.row .col-md-2.text-center a')[schools].get('href',None)
 
-				print '####### link: ', link,
+				link = link.replace('../','')
 
-				query_verification = "SELECT * FROM school WHERE english_name = %s"
+				english_name = soup.select('div.row .col-md-7 h3 a')[schools]
 
-				query_update = "UPDATE school SET (link) = (%s) WHERE english_name = %s"
+				english_name.hidden = True
+
+				print '####### link: ', link, '####### name: ', english_name,
+
+				query_verification = "SELECT * FROM schools WHERE english_name LIKE %s"
+
+				query_update = "UPDATE schools SET (link) = (%s) WHERE school_id = %s"
 
 				try:
 
-					cr.execute(query_verification, (english_name.encode("utf-8").strip(),))
-
-					if cr.fetchall() is None:
-
-						print '######################### this '
-
-					else:
-
-						print "School Exists"
-
-						try:
-
-							cr.execute(query_update , (link.encode("utf-8").strip(), english_name.encode("utf-8").strip(),))
-
-							print "School Is Being updated"
-
-						except Exception, e:
-
-							print ("############ HERE THE error:", e)
+					cr.execute(query_verification , (str(english_name).encode("utf-8").strip() + '%',))
 
 				except Exception, e:
 
 					print "your request failled sorry, here the reason: ", e
+
+				get_the_schools = cr.fetchone()
+
+				if get_the_schools is None:
+
+					print '------------------------------------------- this school doesnt exist'
+
+				else:
+
+					print "*************************************************************    School Exists"
+
+					try:
+
+						cr.execute(query_update , (link.encode("utf-8").strip(), int(get_the_schools[0]),))
+
+						print "School Is Being updated"
+
+					except Exception, e:
+
+						print "############ We cannot update your school, here are the reasons:", e
 
 			conn.commit()
 
@@ -211,13 +246,13 @@ class scrap_mymajor_website(HTMLParser):
 
 		cr = conn.cursor()
 
-		query_link = "SELECT english_name, link, school_id FROM school ORDER BY school_id ASC"
+		query_link = "SELECT english_name, link, school_id FROM schools WHERE country = 'us' AND link LIKE %s ORDER BY school_id ASC"
 
 		err = 0
 
 		try:
 
-			cr.execute(query_link)
+			cr.execute(query_link, ('college/' + '%',))
 
 		except Exception, e:
 
@@ -305,7 +340,7 @@ class scrap_mymajor_website(HTMLParser):
 
 												major_nb += 1
 
-												query_fetch_major = "SELECT major_id FROM degree_type WHERE english_name = %s"
+												query_fetch_major = "SELECT major_id FROM major WHERE english_name = %s"
 
 												try:
 
@@ -368,7 +403,7 @@ class scrap_mymajor_website(HTMLParser):
 
 												major_nb += 1
 
-												query_fetch_major = "SELECT major_id FROM degree_type WHERE english_name = %s"
+												query_fetch_major = "SELECT major_id FROM major WHERE english_name = %s"
 
 												try:
 
@@ -429,6 +464,8 @@ class scrap_mymajor_website(HTMLParser):
 
 	def get_the_majors(self):
 
+		self.create_major_category()
+
 		self.create_major_table()
 
 		conn = self.connect()	
@@ -436,8 +473,6 @@ class scrap_mymajor_website(HTMLParser):
 		cr = conn.cursor()
 
 		nbr_major = 0
-
-		err = 0
 
 		new_link = str(root_url) + '/college-majors'
 
@@ -483,8 +518,6 @@ class scrap_mymajor_website(HTMLParser):
 
 							print ("############ HERE THE error:", e)
 
-							err += 1
-
 					else:
 
 						print "Major Exists"
@@ -499,13 +532,11 @@ class scrap_mymajor_website(HTMLParser):
 
 							print ("############ HERE THE error:", e)
 
-							err += 1
 
 				except Exception, e:
 
 					print "your request failled sorry, here the reason: ", e
 
-					err += 1
 
 			conn.commit()
 
@@ -530,9 +561,13 @@ class scrap_mymajor_website(HTMLParser):
 
 			print 'Ouppppppssss the query did failled... Here the reason: ', e
 
+		nbr_major = 0
+
 		for major in cr.fetchall():
 
-			if major[0] > 5:
+			nbr_major += 1
+
+			if nbr_major > 5 and major[0] > 1128:
 
 				new_link = str(root_url) + str(major[1])
 
@@ -550,9 +585,7 @@ class scrap_mymajor_website(HTMLParser):
 
 				name_link = name_link.replace(name_major,name_major + '-Major/')
 
-				query_verification = "SELECT COUNT(*) FROM major WHERE link = %s"
-
-				query_creation = "INSERT INTO major (major_profile ) VALUES (%s)"
+				query_verification = "SELECT * FROM major WHERE link = %s"
 
 				query_update = "UPDATE major SET major_profile=%s WHERE link = %s"
 
@@ -560,36 +593,29 @@ class scrap_mymajor_website(HTMLParser):
 
 					cr.execute(query_verification, (major_link,))
 
-					test = cr.fetchall()[0][0]
-
-					if int(test) == 0:
-
-						try:
-
-							cr.execute(query_creation , (major_description[0].encode("utf-8").strip(),))
-
-						except Exception, e:
-
-							print ("############ HERE THE error:", e)
-
-					else:
-
-						print "Major Exists"
-
-						try:
-
-							cr.execute(query_update , (major_description[0].encode("utf-8").strip(), major_link,))
-
-							print "Is Being updated"
-
-						except Exception, e:
-
-							print ("############ HERE THE error:", e)
 
 				except Exception, e:
 
-					print "your request failled sorry, here the reason: ", e
+					print "your request failled sorry, here are the reason: ", e
 
+
+				if cr.fetchone() is None:
+
+					print "This major doesn't exist"
+
+				else:
+
+					print "Major Exists"
+
+					try:
+
+						cr.execute(query_update , (major_description[0].encode("utf-8").strip(), major_link,))
+
+						print "Is Being updated"
+
+					except Exception, e:
+
+						print "We cannot update the major,  here are the reasons:", e
 
 				page_schools = str(root_url) + str(name_link)
 
@@ -660,21 +686,127 @@ class scrap_mymajor_website(HTMLParser):
 
 		conn.close()	
 
+	def get_the_majors_categories(self):
+
+		conn = self.connect()	
+
+		cr = conn.cursor()
+
+		new_link = str(root_url) + '/college-majors'
+
+		response = requests.get(new_link)
+
+		soup = bs4.BeautifulSoup(response.text, "lxml")
+
+		major_categorys = [0, 1, 14, 23, 26, 27, 42, 64, 70, 74, 85, 91, 106, 123, 162, 166, 174, 191, 225, 227, 231, 236, 240, 242, 245, 249, 255, 259, 287, 293, 298, 302, 305, 313, 318, 321, 335, 342, 346]
+
+		for major_category in major_categorys:
+
+			query_major_category = "SELECT * FROM major_category WHERE english_name = %s"
+
+			insert_major_category = "INSERT INTO major_category (english_name) VALUES (%s)"
+
+			this_major = soup.select('li.expanded.top')[major_category]
+
+			this_major_category = this_major.select('a')[0]
+
+			this_major_category.hidden = True
+
+			try:
+
+				cr.execute(query_major_category, (str(this_major_category),))
+
+			except Exception, e:
+
+				print 'We could not fetch this category, here are the reasons: ', e
+
+			if cr.fetchone() is None:
+
+				try:
+
+					cr.execute(insert_major_category, (str(this_major_category),))
+
+					print 'You successfully created a new major category'
+
+					conn.commit()
+
+				except Exception, e:
+
+					print 'We could not create this category, here are the reasons: ', e
+
+			else:
+
+				print 'This major category already exists'
+
+			print this_major_category
+
+			majors = this_major.select('li.leaf a')
+
+			for major in majors:
+
+				major.hidden = True
+
+				query_major_category = "SELECT major_category_id FROM major_category WHERE english_name = %s"
+
+				query_major = "SELECT major_id FROM major WHERE english_name = %s"
+
+				update_major = "UPDATE major SET (major_category_id) = (%s) WHERE major_id = %s"
+
+				try:
+
+					cr.execute(query_major, ( str(major),))
+
+				except Exception, e:
+
+					print 'We could not find your major, here are the reasons: ', e
+
+				major_id = cr.fetchone()
+
+				try:
+
+					cr.execute(query_major_category, ( str(this_major_category),))
+
+				except Exception, e:
+
+					print 'We could not find your major category, here are the reasons: ', e
+
+				major_category_id = cr.fetchone()
+
+				if major_id is not None:
+
+					major_id = major_id[0]
+
+					major_category_id = major_category_id[0]
+
+					print major_id
+
+					try:
+
+						cr.execute(update_major, (major_category_id, major_id))
+
+						print 'you successfully updated you major'
+
+						conn.commit()
+
+					except Exception, e:
+
+						print 'We could not update your major, here are the reasons: ',e
+
+				else:
+
+					print 'This major does not exist'
+
+				print major
+
+			print len(this_major.select('li.expanded.top'))
+
+		conn.commit()
+
+		conn.close()
 
 
+# got = scrap_mymajor_website()
 
-
-
-
-# New_object = scrap_mymajor_website()
-# # New_object.get_the_majors()
-# # print "############### HERE THE TEST ON A MAJOR DETAIL PAGE"
-# # New_object.get_degree_type()
-# # print "############### HERE THE TEST ON A MAJOR DETAIL PAGE"
-# # New_object.get_major_details()
-# # print "############### HERE THE TEST ON A MAJOR GLOBAL PAGE"
-# # New_object.thank_you_for_your_schools_mymajor()
-# # print "############### HERE THE TEST ON A SCHOOL PAGE"
-# New_object.get_the_school_detail_page()
+# got.get_the_majors_categories()
 
 

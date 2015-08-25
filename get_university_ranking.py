@@ -55,6 +55,78 @@ class get_university_ranking(HTMLParser):
 
 			return 'AU'
 
+		if arg == '87':
+
+			return 'CN'
+
+		if arg == '146':
+
+			return 'DE'
+
+		if arg == '100':
+
+			return 'JP'
+
+		if arg == '143':
+
+			return 'AT'
+
+		if arg == '153':
+
+			return 'FI'
+
+		if arg == '205':
+
+			return 'CH'
+
+		if arg == '203':
+
+			return 'SE'
+
+		if arg == '94':
+
+			return 'HK'
+
+		if arg == '174':
+
+			return 'IT'
+
+		if arg == '113':
+
+			return 'MY'
+
+		if arg == '171':
+
+			return 'IE'
+
+		if arg == '334':
+
+			return 'NZ'
+
+		if arg == '187':
+
+			return 'NL'
+
+		if arg == '190':
+
+			return 'PL'
+
+		if arg == '189':
+
+			return 'NO'
+
+		if arg == '199':
+
+			return 'ES'
+
+		if arg == '124':
+
+			return 'SG'
+
+		if arg == '39':
+
+			return 'MU'
+
 	def __typeofvalue(self,var):
 	    try:
 	        int(var)
@@ -101,7 +173,7 @@ class get_university_ranking(HTMLParser):
 
 		cr = conn.cursor()
 
-		query_create_table = "CREATE TABLE school_ranking (school_id int NOT NULL, rank_type_id int NOT NULL, rank integer, url varchar(255), FOREIGN KEY (rank_type_id) REFERENCES rank_type(rank_type_id), FOREIGN KEY (school_id) REFERENCES school(school_id))"  
+		query_create_table = "CREATE TABLE school_ranking (school_id int NOT NULL, rank_type_id int NOT NULL, rank integer, url varchar(255), FOREIGN KEY (rank_type_id) REFERENCES rank_type(rank_type_id), FOREIGN KEY (school_id) REFERENCES schools(school_id))"  
 
 		query_test = "select exists(select relname from pg_class where relname = 'school_ranking' and relkind='r')"
 
@@ -138,7 +210,7 @@ class get_university_ranking(HTMLParser):
 
 		cr = conn.cursor()
 
-		countries = ['257','222','319','208']
+		countries = ['257','222','319','208', '87','146', '100', '143', '153', '205', '203', '94', '174', '113', '171', '334', '187', '190', '189', '199', '124', '39']
 
 		query_check_qs = "SELECT * FROM rank_type"
 
@@ -204,11 +276,11 @@ class get_university_ranking(HTMLParser):
 
 					print "'" + str(school_name).strip() + "'"
 
-					school_is_there = "SELECT * FROM school WHERE english_name = %s"
+					school_is_there = "SELECT * FROM schools WHERE english_name LIKE %s"
 
 					try:
 
-						cr.execute(school_is_there , (school_name,))
+						cr.execute(school_is_there , (str(school_name) + '%',))
 
 					except Exception, e:
 
@@ -343,7 +415,9 @@ class get_university_ranking(HTMLParser):
 
 		conn.commit()
 
-		countries = ['canada','united-kingdom','united-states','france','australia-new-zealand']
+		countries = ['canada','united-kingdom','united-states','france','spain','china','japan','netherlands','germany','italy','belgium','hong-kong','new-zealand','norway','finland','poland','sweden','switzerland']
+
+		# countries = ['australia-new-zealand']
 
 		for country in countries:
 
@@ -391,11 +465,11 @@ class get_university_ranking(HTMLParser):
 
 					school_name.hidden = True
 
-					school_is_there = "SELECT * FROM school WHERE english_name = %s"
+					school_is_there = "SELECT * FROM schools WHERE english_name LIKE %s"
 
 					try:
 
-						cr.execute(school_is_there , (str(school_name),))
+						cr.execute(school_is_there , (str(school_name) + '%',))
 
 					except Exception, e:
 
@@ -469,6 +543,8 @@ class get_university_ranking(HTMLParser):
 
 			print "Here are the common school", common_major
 
+			
+
 	def get_usnews_global_ranking(self):
 
 		conn = self.__connect()	
@@ -537,7 +613,7 @@ class get_university_ranking(HTMLParser):
 
 				school_name.hidden = True
 
-				school_is_there = "SELECT * FROM school WHERE english_name = %s"
+				school_is_there = "SELECT * FROM schools WHERE english_name = %s"
 
 				try:
 
