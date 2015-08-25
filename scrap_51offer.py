@@ -181,61 +181,120 @@ class scrap_51offer(HTMLParser):
 
 		count = len(initial_location)
 
-		err = 0
+		count = 0
 
 		for country in range(0 , count - 1):
+
 			for i in range(1 , 20):
+
 				url_to_get =  str(root_url) + '/school/' + str(initial_location[country]) + '-all-' + str(i) + '.html'
+
 				response = requests.get(url_to_get)
+
 				soup = bs4.BeautifulSoup(response.text, "lxml")
+
 				test_page_exist = soup.select('.noResult')
+
 				if not test_page_exist :
+
 					# We want to extract the link the school page
+
 					link_school = soup.select("a.schoolNameEn")
+
 					school_english_name = soup.select('a.schoolNameEn')
+
 					school_chinese_name = soup.select('a.schoolNameEn strong')
+
 					school_location = soup.select('div.schoolLabel ul div div div a')
+
 					school_logo = soup.select('div.schoolLabel ul li a img[src]')
+
 					school_rank = soup.select('div,schoolLabel ul li div.rank')
+
 					for n in range(len(soup.select('div.schoolLabel li'))):
+
 						link = link_school[2*n].get('href',None)
+
 						if link is not None:
+
 							link = link
+
 						english_name = school_english_name[2*n + 1]
+
 						english_name.hidden = True
+
 						chinese_name = school_chinese_name[n]
+
 						chinese_name.hidden = True
-						location = school_location[n]
-						location.hidden = True
-						logo = school_logo[n]
-						rank = school_rank[n]
-						rank.hidden = True
-						query_verification = "SELECT COUNT(*) FROM school_51_offers WHERE english_name = %s OR chinese_name = %s"
-						query_creation = "INSERT INTO school_51_offers (english_name, chinese_name, location, logo, link) VALUES (%s, %s, %s, %s, %s)"
-						query_update = "UPDATE school_51_offers SET (english_name, chinese_name, location, logo, link) = (%s, %s, %s, %s, %s) WHERE english_name = %s OR chinese_name = %s"
-						try:
-							cr.execute(query_verification, (english_name.encode("utf-8").strip(), chinese_name.encode("utf-8").strip(),))
-							test = cr.fetchall()[0][0]
-							if int(test) == 0:
-								try:
-									cr.execute(query_creation , (english_name.encode("utf-8").strip(), chinese_name.encode("utf-8").strip(), location.encode("utf-8").strip(), logo.encode("utf-8").strip(), link.encode("utf-8").strip(), ))
-								except Exception, e:
-									print ("############ HERE THE error:", e)
-									err += 1
-							else:
-								print "Exists"
-								try:
-									cr.execute(query_update , (english_name.encode("utf-8").strip(), chinese_name.encode("utf-8").strip(), location.encode("utf-8").strip(), logo.encode("utf-8").strip(), link.encode("utf-8").strip(), english_name.encode("utf-8").strip(), chinese_name.encode("utf-8").strip(), ))
-									print "Is Being updated"
-								except Exception, e:
-									print ("############ HERE THE error:", e)
-									err += 1
+
+						query_verification = "SELECT * FROM schools WHERE english_name = %s OR chinese_name = %s"
+
+						try: 
+
+							cr.execute(query_verification, ( str(english_name), str(chinese_name).encode('utf-8') ,))
+
 						except Exception, e:
-							print "your request failled sorry, here the reason: ", e
-							err += 1
-		conn.commit()
-		conn.close()
-		print err
+
+							print 'We could not fetch the school required, here are thre reasons: ', e
+
+						school = cr.fetchone()
+
+						if school is None:
+
+							print 'This school exist in our DB'
+
+						else:
+
+							print 'Youhhhouuuuuu this school is in our database'
+
+							count += 1
+
+						# query_creation = "INSERT INTO school_51_offers (english_name, chinese_name, location, logo, link) VALUES (%s, %s, %s, %s, %s)"
+
+						# query_update = "UPDATE school_51_offers SET (english_name, chinese_name, location, logo, link) = (%s, %s, %s, %s, %s) WHERE english_name = %s OR chinese_name = %s"
+
+						# try:
+
+						# 	cr.execute(query_verification, (english_name.encode("utf-8").strip(), chinese_name.encode("utf-8").strip(),))
+
+						# 	test = cr.fetchall()[0][0]
+
+						# 	if int(test) == 0:
+
+						# 		try:
+
+						# 			cr.execute(query_creation , (english_name.encode("utf-8").strip(), chinese_name.encode("utf-8").strip(), location.encode("utf-8").strip(), logo.encode("utf-8").strip(), link.encode("utf-8").strip(), ))
+								
+						# 		except Exception, e:
+
+						# 			print ("############ HERE THE error:", e)
+
+						# 			err += 1
+
+						# 	else:
+
+						# 		print "Exists"
+
+						# 		try:
+
+						# 			cr.execute(query_update , (english_name.encode("utf-8").strip(), chinese_name.encode("utf-8").strip(), location.encode("utf-8").strip(), logo.encode("utf-8").strip(), link.encode("utf-8").strip(), english_name.encode("utf-8").strip(), chinese_name.encode("utf-8").strip(), ))
+									
+						# 			print "Is Being updated"
+
+						# 		except Exception, e:
+
+						# 			print ("############ HERE THE error:", e)
+
+						# 			err += 1
+
+						# except Exception, e:
+
+						# 	print "your request failled sorry, here the reason: ", e
+
+						# 	err += 1
+		# conn.commit()
+		# conn.close()
+		print count
 
 
 	def get_the_school_detail_page(self):
@@ -447,9 +506,9 @@ class scrap_51offer(HTMLParser):
 New_object = scrap_51offer()
 print "############### HERE THE TEST MAIN PAGES"
 New_object.thank_you_for_your_school_51offer()
-print "############### HERE THE TEST ON A SCHOOL PAGE"
-New_object.get_the_school_detail_page()
-print "############### HERE THE TEST ON A MAJOR PAGE"
-New_object.get_the_majors()
+# print "############### HERE THE TEST ON A SCHOOL PAGE"
+# New_object.get_the_school_detail_page()
+# print "############### HERE THE TEST ON A MAJOR PAGE"
+# New_object.get_the_majors()
 
 
