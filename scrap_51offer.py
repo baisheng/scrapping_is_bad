@@ -266,10 +266,6 @@ class scrap_51offer(HTMLParser):
 
 	def get_the_majors(self):
 
-		self.create_major_table()
-
-		self.create_many_to_many_table()
-
 		conn = self.connect()	
 
 		cr = conn.cursor()
@@ -309,7 +305,7 @@ class scrap_51offer(HTMLParser):
 
 				if majors:
 
-					for page_nbr in range(100):
+					for page_nbr in range(40):
 
 						new_page_detail = page_detail + '?pageNo=' + str(page_nbr)
 
@@ -327,62 +323,69 @@ class scrap_51offer(HTMLParser):
 
 								major_name = soup.select('ul.list-ul.list-specialty li h6')[num_major]
 
-								# major_name_array = major_name.split('(')
+								major_name = str(major_name).replace('）').split('（')
+
+								major_english_name = major_name[0]
+
+								major_chinese_name = major_name[1]
 
 								degree_type = soup.select('div.layout.specialty-type span')[2 * num_major]
 
 								num_major += 1
 
-								query_verification = "SELECT COUNT(*) FROM majors_51_offers WHERE english_name = %s"
+								print "YOP HERE IS THE MAJOR AND HERE IS THE ENGLISH NAME: ", major_english_name, " HERE IS THE ENGLISH NAME: ", major_chinese_name, " HERE IS THE DEGREE TYPE: ", degree_type
 
-								query_creation = "INSERT INTO majors_51_offers (english_name, degree_type) VALUES (%s, %s)"
+								# query_verification = "SELECT COUNT(*) FROM majors_many2many WHERE major_english_name LIKE %s OR major_chinese_name LIKE %s"
 
-								query_update = "UPDATE majors_51_offers SET (english_name, degree_type) = (%s, %s) WHERE english_name = %s"
+								# query_creation = "INSERT INTO majors_51_offers (english_name, degree_type) VALUES (%s, %s)"
 
-								try:
+								# query_update = "UPDATE majors_51_offers SET (english_name, degree_type) = (%s, %s) WHERE english_name = %s"
 
-									cr.execute(query_verification, (major_name.encode("utf-8").strip(),))
+								# try:
 
-									test = cr.fetchall()[0][0]
+								# 	cr.execute(query_verification, (major_name.encode("utf-8").strip(),))
 
-									if int(test) == 0:
+								# 	test = cr.fetchall()[0][0]
 
-										try:
+								# 	if int(test) == 0:
 
-											cr.execute(query_creation , (major_name.encode("utf-8").strip(), degree_type.encode("utf-8").strip(), ))
+								# 		try:
+
+								# 			cr.execute(query_creation , (major_name.encode("utf-8").strip(), degree_type.encode("utf-8").strip(), ))
 										
-										except Exception, e:
+								# 		except Exception, e:
 
-											print ("############ HERE THE error:", e)
+								# 			print ("############ HERE THE error:", e)
 
-											err += 1
+								# 			err += 1
 
-									else:
+								# 	else:
 
-										print "Exists"
+								# 		print "Exists"
 
-										try:
+								# 		try:
 
-											cr.execute(query_update , (major_name.encode("utf-8").strip(), degree_type.encode("utf-8").strip(), major_name.encode("utf-8").strip(),))
+								# 			cr.execute(query_update , (major_name.encode("utf-8").strip(), degree_type.encode("utf-8").strip(), major_name.encode("utf-8").strip(),))
 											
-											print "Is Being updated"
+								# 			print "Is Being updated"
 
-										except Exception, e:
+								# 		except Exception, e:
 
-											print ("############ HERE THE error:", e)
+								# 			print ("############ HERE THE error:", e)
 
-											err += 1
+								# 			err += 1
 
-								except Exception, e:
+								# except Exception, e:
 
-									print "your request failled sorry, here the reason: ", e
+								# 	print "your request failled sorry, here the reason: ", e
 
-									err += 1
+								# 	err += 1
 
-								conn.commit()
+								# conn.commit()
 
-								print new_page_detail
+								# print new_page_detail
 			conn.close()
+			
 			print nbr_major
 
 
