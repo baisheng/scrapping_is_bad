@@ -6,6 +6,7 @@ import sys
 from lxml.html.clean import clean_html
 import psycopg2
 from HTMLParser import HTMLParser
+import math
 
 # Small trick to reload the system using utf8 rather then ascii2 that will cause some trouble with csv import in postgres
 reload(sys)
