@@ -332,15 +332,13 @@ class scrap_51offer(HTMLParser):
 
 								major_name = soup.select('ul.list-ul.list-specialty li h6')[num_major]
 
+								major_name.hidden = True
+
 								major_name = str(major_name).replace('）','').split('（')
 
-								major_english_name = major_name[0]
-
-								major_english_name.hidden = True
+								major_english_name = major_name[0]	
 
 								major_chinese_name = major_name[1]
-
-								major_chinese_name.hidden = True
 
 								degree_type = soup.select('div.layout.specialty-type span')[2 * num_major]
 
