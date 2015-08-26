@@ -316,6 +316,8 @@ class scrap_51offer(HTMLParser):
 
 						response = requests.post(new_page_detail)
 
+						print 'We we go'
+
 						soup = bs4.BeautifulSoup(response.text, "lxml")
 
 						majors = soup.select('ul.list-ul.list-specialty li')
