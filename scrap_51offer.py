@@ -250,19 +250,21 @@ class scrap_51offer(HTMLParser):
 
 							counter_in += 1
 
-							query_update = "UPDATE schools SET (link) = (%s) WHERE english_name LIKE %s OR chinese_name LIKE %s"
+							query_update = "UPDATE schools SET (link) = (%s) WHERE school_id = %s"
+
+							print int(school[0])
 
 							try:
 
-								cr.execute(query_update , (link.encode("utf-8").strip(), str(english_name) + '%', str(chinese_name).encode('utf-8') + '%',))
+								cr.execute(query_update , (link.encode("utf-8").strip(), int(school[0]),))
+
+								conn.commit()
 									
 							except Exception, e:
 
 									print " We could not update your schools link, here are the reasons:" , e
-
-
-		# conn.commit()
-		# conn.close()
+		
+		conn.close()
 		print '######## We have ',counter_in, ' schools in common with 51 offer'
 		print '######## We have ',counter_out, ' schools not in common with 51 offer'
 
