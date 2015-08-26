@@ -1,3 +1,5 @@
+ #coding=utf-8 
+
 import requests
 import bs4
 import sys  
@@ -143,11 +145,11 @@ class scrap_51offer(HTMLParser):
 
 		cr = conn.cursor()
 
-		query_create_table = "CREATE TABLE majors_schools_table (major_id integer NOT NULL, school_id integer NOT NULL, FOREIGN KEY (major_id) REFERENCES majors_51_offers (major_id), FOREIGN KEY (school_id) REFERENCES school_51_offers (school_id))"  
+		query_create_table = "CREATE TABLE majors_many2many  (major_id integer NOT NULL, school_id integer NOT NULL, degree_type_id integer NOT NULL, , FOREIGN KEY (major_id) REFERENCES major (major_id), FOREIGN KEY (school_id) REFERENCES schools (school_id), FOREIGN KEY (degree_type_id) REFERENCES degree_type (degree_type_id)"  
 
 		# FIRST WE CHECK IF THE TABLE ALREADY EXISTS
 
-		query_test = "select exists(select relname from pg_class where relname = 'majors_schools_table' and relkind='r')"
+		query_test = "select exists(select relname from pg_class where relname = 'majors_many2many' and relkind='r')"
 
 		try:
 
@@ -168,6 +170,7 @@ class scrap_51offer(HTMLParser):
 				print 'Ouppppppssss we cannot create this table.... Here the reason: ', e
 
 		conn.commit()
+
 		conn.close()	
 
 
@@ -267,6 +270,8 @@ class scrap_51offer(HTMLParser):
 	def get_the_majors(self):
 
 		conn = self.connect()	
+
+		self.create_many_to_many_table()
 
 		cr = conn.cursor()
 
@@ -385,7 +390,7 @@ class scrap_51offer(HTMLParser):
 
 								# print new_page_detail
 			conn.close()
-			
+
 			print nbr_major
 
 
