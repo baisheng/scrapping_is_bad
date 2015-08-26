@@ -315,7 +315,7 @@ class scrap_51offer(HTMLParser):
 
 				nbr_result.hidden = True
 
-				nbr_result = math.ceil(int(nbr_result)/10)
+				nbr_result = math.ceil(int(str(nbr_result))/10)
 
 				print '############################ Here is the number of result:', nbr_result
 
