@@ -344,9 +344,11 @@ class scrap_51offer(HTMLParser):
 
 								degree_type.hidden = True
 
+								degree_type = str(degree_type).split('：')[1].strip()
+
 								num_major += 1
 
-								print "YOP HERE IS THE MAJOR AND HERE IS THE ENGLISH NAME: ", str(major_english_name).strip(), " HERE IS THE ENGLISH NAME: ", str(major_chinese_name).strip(), " HERE IS THE DEGREE TYPE: ", str(degree_type).strip()
+								print "YOP HERE IS THE MAJOR AND HERE IS THE ENGLISH NAME: ", str(major_english_name).strip(), " HERE IS THE CHINESE NAME: ", str(major_chinese_name).strip(), " HERE IS THE DEGREE TYPE: ", str(degree_type).strip()
 
 								# query_verification = "SELECT COUNT(*) FROM majors_many2many WHERE major_english_name LIKE %s OR major_chinese_name LIKE %s"
 
