@@ -145,7 +145,7 @@ class scrap_51offer(HTMLParser):
 
 		cr = conn.cursor()
 
-		query_create_table = "CREATE TABLE majors_many2many  (major_id integer NOT NULL, school_id integer NOT NULL, degree_type_id integer NOT NULL, english_name varchar, chinese_name varchar, major_profile_english text,  major_profile_chinese text, url varchar, FOREIGN KEY (major_id) REFERENCES major (major_id), FOREIGN KEY (school_id) REFERENCES schools (school_id), FOREIGN KEY (degree_type_id) REFERENCES degree_type (degree_type_id)"  
+		query_create_table = "CREATE TABLE majors_many2many  (major_id integer NOT NULL, school_id integer NOT NULL, degree_type_id integer NOT NULL, english_name varchar, chinese_name varchar, major_profile_english text,  major_profile_chinese text, url varchar, FOREIGN KEY (major_id) REFERENCES major (major_id), FOREIGN KEY (school_id) REFERENCES schools (school_id), FOREIGN KEY (degree_type_id) REFERENCES degree_type (degree_type_id))"  
 
 		# FIRST WE CHECK IF THE TABLE ALREADY EXISTS
 
@@ -240,13 +240,13 @@ class scrap_51offer(HTMLParser):
 
 						if school is None:
 
-							print 'This school does not exist in our DB'
+							print 'This school does not exist in our DB for this country: ', initial_location[country]
 
 							counter_out += 1
 
 						else:
 
-							print 'Youhhhouuuuuu this school is in our database'
+							print 'Youhhhouuuuuu this school is in our database for this country: ', initial_location[country]
 
 							counter_in += 1
 
