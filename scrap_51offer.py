@@ -181,7 +181,9 @@ class scrap_51offer(HTMLParser):
 
 		count = len(initial_location)
 
-		counter = 0
+		counter_in = 0
+
+		counter_out = 0
 
 		for country in range(0 , count - 1):
 
@@ -204,12 +206,6 @@ class scrap_51offer(HTMLParser):
 					school_english_name = soup.select('a.schoolNameEn')
 
 					school_chinese_name = soup.select('a.schoolNameEn strong')
-
-					school_location = soup.select('div.schoolLabel ul div div div a')
-
-					school_logo = soup.select('div.schoolLabel ul li a img[src]')
-
-					school_rank = soup.select('div,schoolLabel ul li div.rank')
 
 					for n in range(len(soup.select('div.schoolLabel li'))):
 
@@ -243,139 +239,30 @@ class scrap_51offer(HTMLParser):
 
 							print 'This school does not exist in our DB'
 
+							counter_out += 1
+
 						else:
 
 							print 'Youhhhouuuuuu this school is in our database'
 
-							counter += 1
+							counter_in += 1
 
-						# query_creation = "INSERT INTO school_51_offers (english_name, chinese_name, location, logo, link) VALUES (%s, %s, %s, %s, %s)"
+							query_update = "UPDATE schools SET (link) = (%s) WHERE english_name LIKE %s OR chinese_name LIKE %s"
 
-						# query_update = "UPDATE school_51_offers SET (english_name, chinese_name, location, logo, link) = (%s, %s, %s, %s, %s) WHERE english_name = %s OR chinese_name = %s"
+							try:
 
-						# try:
-
-						# 	cr.execute(query_verification, (english_name.encode("utf-8").strip(), chinese_name.encode("utf-8").strip(),))
-
-						# 	test = cr.fetchall()[0][0]
-
-						# 	if int(test) == 0:
-
-						# 		try:
-
-						# 			cr.execute(query_creation , (english_name.encode("utf-8").strip(), chinese_name.encode("utf-8").strip(), location.encode("utf-8").strip(), logo.encode("utf-8").strip(), link.encode("utf-8").strip(), ))
-								
-						# 		except Exception, e:
-
-						# 			print ("############ HERE THE error:", e)
-
-						# 			err += 1
-
-						# 	else:
-
-						# 		print "Exists"
-
-						# 		try:
-
-						# 			cr.execute(query_update , (english_name.encode("utf-8").strip(), chinese_name.encode("utf-8").strip(), location.encode("utf-8").strip(), logo.encode("utf-8").strip(), link.encode("utf-8").strip(), english_name.encode("utf-8").strip(), chinese_name.encode("utf-8").strip(), ))
+								cr.execute(query_update , (link.encode("utf-8").strip(), str(english_name) + '%', str(chinese_name).encode('utf-8') + '%',))
 									
-						# 			print "Is Being updated"
+							except Exception, e:
 
-						# 		except Exception, e:
+									print " We could not update your schools link, here are the reasons:" , e
 
-						# 			print ("############ HERE THE error:", e)
 
-						# 			err += 1
-
-						# except Exception, e:
-
-						# 	print "your request failled sorry, here the reason: ", e
-
-						# 	err += 1
 		# conn.commit()
 		# conn.close()
-		print counter
+		print '######## We have ',counter_in, ' schools in common with 51 offer'
+		print '######## We have ',counter_out, ' schools not in common with 51 offer'
 
-
-	def get_the_school_detail_page(self):
-
-		conn = self.connect()	
-
-		cr = conn.cursor()
-
-		query_link = "SELECT english_name, chinese_name, link, school_id FROM school_51_offers ORDER BY school_id ASC"
-
-		err = 0
-
-		try:
-
-			cr.execute(query_link)
-
-		except Exception, e:
-
-			print "your request failled sorry, here the reason: ", e
-
-			err += 1
-
-		if err == 0:
-
-			links = cr.fetchall()
-
-			for link in links:
-
-				page_detail = str(root_url) + str(link[2])
-
-				response = requests.get(page_detail)
-
-				soup = bs4.BeautifulSoup(response.text, "lxml")
-					
-				content = soup.select('div.summarize div.text-content')[0]
-				content.hidden = True
-
-				country = soup.select('div.mete span label')[0]
-				country.hidden = True
-
-				city = soup.select('div.mete span label')[1]
-				city.hidden = True
-
-				if soup.select('div.school-ranking div.ranking-con span'):
-					world_ranking = soup.select('div.school-ranking div.ranking-con span')[0]
-					world_ranking.hidden = True
-				else:
-					world_ranking = 'Nan'
-
-				if soup.select('div.school-ranking div.ranking-con span'):
-					national_ranking = soup.select('div.school-ranking div.ranking-con span')[1]
-					national_ranking.hidden = True
-				else:
-					national_ranking = 'Nan'
-				
-				if soup.select('div.sidebar_baiduXuqiu div'):
-					tuition_fee = soup.select('div.sidebar_baiduXuqiu div')[0]
-					tuition_fee.hidden = True
-					tuition_fee = tuition_fee
-				else:
-					tuition_fee = ''
-				
-				if soup.select('div.sidebar_baiduXuqiu div') and len(soup.select('div.sidebar_baiduXuqiu div')) > 1:
-					cost_of_living = soup.select('div.sidebar_baiduXuqiu div')[1]
-					cost_of_living.hidden = True
-					cost_of_living = tuition_fee
-				else:
-					cost_of_living = ''
-
-				update_school_info = "UPDATE school_51_offers SET (introduction, country, city, tuition_fees, cost_of_living, world_ranking, national_ranking) = (%s, %s, %s, %s, %s, %s, %s)  WHERE link = %s"
-
-				try:
-					cr.execute(update_school_info , (content.encode("utf-8").strip(), country.encode("utf-8").strip(), city.encode("utf-8").strip(), tuition_fee.encode("utf-8").strip(), cost_of_living.encode("utf-8").strip(), str(world_ranking).encode("utf-8").strip(), str(national_ranking).encode("utf-8").strip(), link[2], ))
-					message = 'topppppp, that is working'
-					# message +=  '\n##### HERE IS THE SCHOOL CITY:', city.encode("utf-8").strip(), '\n##### HERE ARE THE SCHOOL TUITION FEES:', tuition_fee.strip(), '\n##### HERE ARE THE COST OF LIVING:', cost_of_living.strip()
-					conn.commit()
-				except Exception, e:
-					message = 'OUPPPPsss your update failled here the reason:', e
-				print message
-		conn.commit()
-		conn.close()
 
 	def get_the_majors(self):
 
@@ -387,9 +274,7 @@ class scrap_51offer(HTMLParser):
 
 		cr = conn.cursor()
 
-		query_link = "SELECT english_name, chinese_name, link, school_id FROM school_51_offers ORDER BY school_id ASC"
-
-		err = 0
+		query_link = "SELECT english_name, chinese_name, link, school_id FROM schools ORDER BY school_id ASC"
 
 		try:
 
@@ -399,13 +284,12 @@ class scrap_51offer(HTMLParser):
 
 			print "your request failled sorry, here the reason: ", e
 
-			err += 1
 
-		if err == 0:
+		links = cr.fetchall()
 
-			links = cr.fetchall()
+		nbr_major = 0
 
-			nbr_major = 0
+		if links is not None:
 
 			for link in links:
 
