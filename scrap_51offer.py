@@ -252,7 +252,7 @@ class scrap_51offer(HTMLParser):
 
 							query_update = "UPDATE schools SET (link) = (%s) WHERE school_id = %s"
 
-							print int(school[0])
+							print int(school[0]), '       ', link
 
 							try:
 
@@ -332,7 +332,7 @@ class scrap_51offer(HTMLParser):
 
 								major_name = soup.select('ul.list-ul.list-specialty li h6')[num_major]
 
-								major_name = str(major_name).replace('）').split('（')
+								major_name = str(major_name).replace('）','').split('（')
 
 								major_english_name = major_name[0]
 
