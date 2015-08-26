@@ -310,9 +310,15 @@ class scrap_51offer(HTMLParser):
 
 				majors = soup.select('ul.list-ul.list-specialty li')
 
+				nbr_result = soup.select('div.result-info span')[0]
+
+				nbr_result.hidden = True
+
+				print '############################ Here is the number of result:', nbr_result
+
 				if majors:
 
-					for page_nbr in range(40):
+					for page_nbr in range(60):
 
 						new_page_detail = page_detail + '?pageNo=' + str(page_nbr)
 
