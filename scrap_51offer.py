@@ -181,7 +181,7 @@ class scrap_51offer(HTMLParser):
 
 		count = len(initial_location)
 
-		count = 0
+		counter = 0
 
 		for country in range(0 , count - 1):
 
@@ -247,7 +247,7 @@ class scrap_51offer(HTMLParser):
 
 							print 'Youhhhouuuuuu this school is in our database'
 
-							count += 1
+							counter += 1
 
 						# query_creation = "INSERT INTO school_51_offers (english_name, chinese_name, location, logo, link) VALUES (%s, %s, %s, %s, %s)"
 
@@ -294,7 +294,7 @@ class scrap_51offer(HTMLParser):
 						# 	err += 1
 		# conn.commit()
 		# conn.close()
-		print count
+		print counter
 
 
 	def get_the_school_detail_page(self):
