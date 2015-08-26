@@ -227,11 +227,11 @@ class scrap_51offer(HTMLParser):
 
 						chinese_name.hidden = True
 
-						query_verification = "SELECT * FROM schools WHERE english_name = %s OR chinese_name = %s"
+						query_verification = "SELECT * FROM schools WHERE english_name LIKE %s OR chinese_name LIKE %s"
 
 						try: 
 
-							cr.execute(query_verification, ( str(english_name), str(chinese_name).encode('utf-8') ,))
+							cr.execute(query_verification, ( str(english_name) + '%', str(chinese_name).encode('utf-8') + '%',))
 
 						except Exception, e:
 
@@ -241,7 +241,7 @@ class scrap_51offer(HTMLParser):
 
 						if school is None:
 
-							print 'This school exist in our DB'
+							print 'This school does not exist in our DB'
 
 						else:
 
