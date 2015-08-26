@@ -336,13 +336,19 @@ class scrap_51offer(HTMLParser):
 
 								major_english_name = major_name[0]
 
+								major_english_name.hidden = True
+
 								major_chinese_name = major_name[1]
+
+								major_chinese_name.hidden = True
 
 								degree_type = soup.select('div.layout.specialty-type span')[2 * num_major]
 
+								degree_type.hidden = True
+
 								num_major += 1
 
-								print "YOP HERE IS THE MAJOR AND HERE IS THE ENGLISH NAME: ", major_english_name, " HERE IS THE ENGLISH NAME: ", major_chinese_name, " HERE IS THE DEGREE TYPE: ", degree_type
+								print "YOP HERE IS THE MAJOR AND HERE IS THE ENGLISH NAME: ", str(major_english_name).strip(), " HERE IS THE ENGLISH NAME: ", str(major_chinese_name).strip(), " HERE IS THE DEGREE TYPE: ", str(degree_type).strip()
 
 								# query_verification = "SELECT COUNT(*) FROM majors_many2many WHERE major_english_name LIKE %s OR major_chinese_name LIKE %s"
 
