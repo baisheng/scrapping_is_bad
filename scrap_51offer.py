@@ -275,11 +275,11 @@ class scrap_51offer(HTMLParser):
 
 		cr = conn.cursor()
 
-		query_link = "SELECT english_name, chinese_name, link, school_id FROM schools ORDER BY school_id ASC"
+		query_link = "SELECT english_name, chinese_name, link, school_id FROM schools WHERE link LIKE %s ORDER BY school_id ASC"
 
 		try:
 
-			cr.execute(query_link)
+			cr.execute(query_link, ( 'school/' + "%",))
 
 		except Exception, e:
 
